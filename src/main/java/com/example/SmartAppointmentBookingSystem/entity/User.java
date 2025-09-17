@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class User {
@@ -21,6 +23,8 @@ public class User {
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role;
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
     public User(Long id, String userCode, String name, String email, String password, Role role, Tenant tenant) {
         this.id = id;
@@ -30,6 +34,9 @@ public class User {
         this.password = password;
         this.role = role;
         this.tenant = tenant;
+    }
+    public User(){
+
     }
     public Long getId() {
         return id;

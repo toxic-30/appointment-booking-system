@@ -1,19 +1,8 @@
 package com.example.SmartAppointmentBookingSystem.entity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-
 import com.example.SmartAppointmentBookingSystem.enums.AppointmentStatus;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 @Entity
 public class Appointment {
@@ -32,23 +21,28 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)
     private Service service;
-    private LocalDate appointmentDate;
-    private LocalTime appointmentTime;
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
+
+    private LocalDateTime appointmentDateAndTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Appointment(Long id, String notes, AppointmentStatus status, User provider, User customer, Service service,
-            LocalDate appointmentDate, LocalTime appointmentTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            LocalDateTime appointmentDateAndTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.notes = notes;
         this.status = status;
         this.provider = provider;
         this.customer = customer;
         this.service = service;
-        this.appointmentDate = appointmentDate;
-        this.appointmentTime = appointmentTime;
+        this.appointmentDateAndTime = appointmentDateAndTime;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+    public Appointment(){
+        
     }
 
     public Long getId() {
@@ -87,17 +81,11 @@ public class Appointment {
     public void setService(Service service) {
         this.service = service;
     }
-    public LocalDate getAppointmentDate() {
-        return appointmentDate;
+    public LocalDateTime getAppointmentDateAndTime() {
+        return appointmentDateAndTime;
     }
-    public void setAppointmentDate(LocalDate appointmentDate) {
-        this.appointmentDate = appointmentDate;
-    }
-    public LocalTime getAppointmentTime() {
-        return appointmentTime;
-    }
-    public void setAppointmentTime(LocalTime appointmentTime) {
-        this.appointmentTime = appointmentTime;
+    public void setAppointmentDateAndTime(LocalDateTime appointmentDateAndTime) {
+        this.appointmentDateAndTime = appointmentDateAndTime;
     }
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -115,8 +103,8 @@ public class Appointment {
     @Override
     public String toString() {
         return "Appointment [id=" + id + ", notes=" + notes + ", status=" + status + ", provider=" + provider
-                + ", customer=" + customer + ", service=" + service + ", appointmentDate=" + appointmentDate
-                + ", appointmentTime=" + appointmentTime + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt
+                + ", customer=" + customer + ", service=" + service + ", appointmentDateAndTime=" + appointmentDateAndTime
+                + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt
                 + "]";
     }
     
