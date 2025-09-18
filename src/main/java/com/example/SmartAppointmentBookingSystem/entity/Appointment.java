@@ -3,109 +3,64 @@ package com.example.SmartAppointmentBookingSystem.entity;
 import java.time.LocalDateTime;
 import com.example.SmartAppointmentBookingSystem.enums.AppointmentStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "appointments")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Appointment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(length = 1000)
     private String notes;
     @Enumerated(EnumType.STRING)
-    private AppointmentStatus status;
-    @ManyToOne
+    @Column(nullable = false)
+    private AppointmentStatus status = AppointmentStatus.PENDING;
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id", nullable = false)
     private User provider;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private User customer;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
-    @ManyToOne
+    private ProvidedService service;
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
-
-    private LocalDateTime appointmentDateAndTime;
+    @Column(nullable = false)
+    private LocalDateTime appointmentTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Appointment(Long id, String notes, AppointmentStatus status, User provider, User customer, Service service,
-            LocalDateTime appointmentDateAndTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.notes = notes;
-        this.status = status;
-        this.provider = provider;
-        this.customer = customer;
-        this.service = service;
-        this.appointmentDateAndTime = appointmentDateAndTime;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-    public Appointment(){
-        
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getNotes() {
-        return notes;
-    }
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-    public AppointmentStatus getStatus() {
-        return status;
-    }
-    public void setStatus(AppointmentStatus status) {
-        this.status = status;
-    }
-    public User getProvider() {
-        return provider;
-    }
-    public void setProvider(User provider) {
-        this.provider = provider;
-    }
-    public User getCustomer() {
-        return customer;
-    }
-    public void setCustomer(User customer) {
-        this.customer = customer;
-    }
-    public Service getService() {
-        return service;
-    }
-    public void setService(Service service) {
-        this.service = service;
-    }
-    public LocalDateTime getAppointmentDateAndTime() {
-        return appointmentDateAndTime;
-    }
-    public void setAppointmentDateAndTime(LocalDateTime appointmentDateAndTime) {
-        this.appointmentDateAndTime = appointmentDateAndTime;
-    }
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
     @Override
     public String toString() {
-        return "Appointment [id=" + id + ", notes=" + notes + ", status=" + status + ", provider=" + provider
-                + ", customer=" + customer + ", service=" + service + ", appointmentDateAndTime=" + appointmentDateAndTime
-                + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt
-                + "]";
+        return "Appointment [id=" + id +
+                ", status=" + status +
+                ", providerId=" + (provider != null ? provider.getId() : null) +
+                ", customerId=" + (customer != null ? customer.getId() : null) +
+                ", serviceId=" + (service != null ? service.getId() : null) +
+                ", tenantId=" + (tenant != null ? tenant.getId() : null) +
+                ", appointmentTime=" + appointmentTime +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt + "]";
     }
-    
 }

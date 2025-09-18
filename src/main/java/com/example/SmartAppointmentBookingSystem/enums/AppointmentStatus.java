@@ -1,8 +1,10 @@
 package com.example.SmartAppointmentBookingSystem.enums;
 
 public enum AppointmentStatus {
+    PENDING,
     BOOKED,
     CANCELLED,
     COMPLETED,
-    CONFIRMED
+    CONFIRMED,
+    NO_SHOW
 }
