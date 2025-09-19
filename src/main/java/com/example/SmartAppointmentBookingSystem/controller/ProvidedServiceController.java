@@ -15,7 +15,7 @@ public class ProvidedServiceController {
     private final ProvidedServiceService providedServiceService;
 
     // Get all services
-    @GetMapping
+    @GetMapping("/getAllServices")
     public ResponseEntity<List<ProvidedServiceResponseDTO>> getAllServices() {
         return ResponseEntity.ok(providedServiceService.getAllServices());
     }
@@ -33,7 +33,7 @@ public class ProvidedServiceController {
     }
 
     // Add new service
-    @PostMapping
+    @PostMapping("/addService")
     public ResponseEntity<ProvidedServiceResponseDTO> addService(@RequestBody ProvidedServiceRequestDTO requestDTO) {
         return ResponseEntity.ok(providedServiceService.addService(requestDTO));
     }
@@ -48,7 +48,7 @@ public class ProvidedServiceController {
     }
 
     //  Delete service
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteService(@PathVariable Long id) {
         providedServiceService.deleteService(id);
         return ResponseEntity.noContent().build();

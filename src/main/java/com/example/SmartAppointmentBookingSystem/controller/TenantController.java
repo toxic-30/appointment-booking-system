@@ -17,7 +17,7 @@ public class TenantController {
     private final TenantService tenantService;
 
     // Get all tenants
-    @GetMapping
+    @GetMapping("/getAllTenants")
     public ResponseEntity<List<TenantResponseDTO>> getAllTenants() {
         return ResponseEntity.ok(tenantService.getAllTenants());
     }
@@ -27,12 +27,12 @@ public class TenantController {
         return ResponseEntity.ok(tenantService.getTenantById(id));
     }
     // Add new tenant
-    @PostMapping
+    @PostMapping("/addTenant")
     public ResponseEntity<TenantResponseDTO> addTenant(@RequestBody TenantRequestDTO tenantRequestDTO) {
         return ResponseEntity.ok(tenantService.addTenant(tenantRequestDTO));
     }
     // Update tenant
-    @PutMapping("/{id}")
+    @PutMapping("/updateTenant/{id}")
     public ResponseEntity<TenantResponseDTO> updateTenant(
             @PathVariable Long id,
             @RequestBody TenantRequestDTO tenantRequestDTO
@@ -40,7 +40,7 @@ public class TenantController {
         return ResponseEntity.ok(tenantService.updateTenant(id, tenantRequestDTO));
     }
     // Delete tenant
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteTenant(@PathVariable Long id) {
         tenantService.deleteTenant(id);
         return ResponseEntity.noContent().build();
