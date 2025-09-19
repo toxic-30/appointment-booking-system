@@ -1,8 +1,6 @@
 package com.example.SmartAppointmentBookingSystem.entity;
 
 import java.time.LocalDateTime;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,11 +26,18 @@ public class ProviderServiceMapping {
     private Double priceOverride;
     private Integer durationOverrideMinutes;
     private Boolean isActive = true;
-    @CreatedDate
-    @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
-    @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @Override
     public String toString() {

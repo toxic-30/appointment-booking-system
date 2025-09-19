@@ -15,12 +15,12 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
-    @PostMapping
+    @PostMapping("/createAppointment")
     public AppointmentResponseDTO createAppointment(@RequestBody AppointmentRequestDTO requestDTO) {
         return appointmentService.createAppointment(requestDTO);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getAppointment/{id}")
     public AppointmentResponseDTO getAppointment(@PathVariable Long id) {
         return appointmentService.getAppointmentById(id);
     }
@@ -40,12 +40,12 @@ public class AppointmentController {
         return appointmentService.getAppointmentsByTenant(tenantId);
     }
 
-    @PutMapping("/{id}/status")
+    @PutMapping("/updateStatus/{id}")
     public AppointmentResponseDTO updateStatus(@PathVariable Long id, @RequestParam String status) {
         return appointmentService.updateAppointmentStatus(id, status);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public void deleteAppointment(@PathVariable Long id) {
         appointmentService.deleteAppointment(id);
     }

@@ -4,16 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.*;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "services")
-@EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,11 +30,17 @@ public class ProvidedService {
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore // prevents infinite loop when serializing
     private List<Appointment> appointments = new ArrayList<>();
-    
-    @CreatedDate
-    @Column(updatable = false, nullable = false)
-    private LocalDateTime createdAt;
 
-    @LastModifiedDate
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
