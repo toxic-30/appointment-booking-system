@@ -6,6 +6,7 @@ import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedSer
 import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedServiceResponseDTO;
 import com.example.SmartAppointmentBookingSystem.entity.ProvidedService;
 import com.example.SmartAppointmentBookingSystem.entity.Tenant;
+import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
 import com.example.SmartAppointmentBookingSystem.repository.ProvidedServiceRepository;
 import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
 import com.example.SmartAppointmentBookingSystem.service.ProvidedServiceService;
@@ -35,14 +36,14 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
     @Override
     public ProvidedServiceResponseDTO getServiceById(Long id) {
         ProvidedService service = providedServiceRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
         return toResponseDTO(service);
     }
 
     @Override
     public ProvidedServiceResponseDTO addService(ProvidedServiceRequestDTO serviceRequestDTO) {
         Tenant tenant = tenantRepo.findById(serviceRequestDTO.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant not found with id: " + serviceRequestDTO.getTenantId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + serviceRequestDTO.getTenantId()));
 
         ProvidedService service = new ProvidedService();
         service.setName(serviceRequestDTO.getName());
@@ -58,7 +59,7 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
     @Override
     public ProvidedServiceResponseDTO updateService(Long id, ProvidedServiceRequestDTO serviceRequestDTO) {
         ProvidedService service = providedServiceRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
 
         service.setName(serviceRequestDTO.getName());
         service.setDescription(serviceRequestDTO.getDescription());
@@ -68,7 +69,7 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
         // Optional: update tenant if provided
         if (serviceRequestDTO.getTenantId() != null) {
             Tenant tenant = tenantRepo.findById(serviceRequestDTO.getTenantId())
-                    .orElseThrow(() -> new RuntimeException("Tenant not found with id: " + serviceRequestDTO.getTenantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + serviceRequestDTO.getTenantId()));
             service.setTenant(tenant);
         }
 
@@ -79,7 +80,7 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
     @Override
     public void deleteService(Long id) {
          ProvidedService service = providedServiceRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
         providedServiceRepo.delete(service);
     }
 

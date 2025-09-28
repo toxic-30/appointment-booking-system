@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 import com.example.SmartAppointmentBookingSystem.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Builder
 @Table(name = "appointments")
 @Data
 @NoArgsConstructor

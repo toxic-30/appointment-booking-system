@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import com.example.SmartAppointmentBookingSystem.dto.tenant.TenantRequestDTO;
 import com.example.SmartAppointmentBookingSystem.dto.tenant.TenantResponseDTO;
 import com.example.SmartAppointmentBookingSystem.entity.Tenant;
+import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
 import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
 import com.example.SmartAppointmentBookingSystem.service.TenantService;
 import jakarta.transaction.Transactional;
@@ -28,14 +29,14 @@ public class TenantServiceImplementation implements TenantService{
     @Override
     public TenantResponseDTO getTenantById(Long id) {
         Tenant tenant = tenantRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tenant not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + id));
         return toResponseDTO(tenant);
     }
 
     @Override
     public TenantResponseDTO addTenant(TenantRequestDTO tenantRequestDTO) {
        if (tenantRepo.findByEmail(tenantRequestDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Tenant with email already exists");
+            throw new ResourceNotFoundException("Tenant with email already exists");
         }
 
         Tenant tenant = toEntity(tenantRequestDTO);
@@ -46,7 +47,7 @@ public class TenantServiceImplementation implements TenantService{
     @Override
     public TenantResponseDTO updateTenant(Long id, TenantRequestDTO tenantRequestDTO) {
         Tenant tenant = tenantRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tenant not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + id));
         tenant.setName(tenantRequestDTO.getName());
         tenant.setEmail(tenantRequestDTO.getEmail());
         tenant.setContactNumber(tenantRequestDTO.getContactNumber());
@@ -58,7 +59,7 @@ public class TenantServiceImplementation implements TenantService{
     @Override
     public void deleteTenant(Long id) {
         if (!tenantRepo.existsById(id)) {
-            throw new RuntimeException("Tenant not found with id: " + id);
+            throw new ResourceNotFoundException("Tenant not found with id: " + id);
         }
         tenantRepo.deleteById(id);
     }

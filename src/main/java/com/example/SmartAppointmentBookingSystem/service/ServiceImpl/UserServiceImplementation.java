@@ -10,6 +10,7 @@ import com.example.SmartAppointmentBookingSystem.dto.user.UserResponseDTO;
 import com.example.SmartAppointmentBookingSystem.entity.Tenant;
 import com.example.SmartAppointmentBookingSystem.entity.User;
 import com.example.SmartAppointmentBookingSystem.enums.UserRole;
+import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
 import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.UserService;
@@ -37,7 +38,7 @@ public class UserServiceImplementation implements UserService{
     public UserResponseDTO addUser(UserRequestDTO userRequestDTO) {
 
         if (userRepo.findByEmail(userRequestDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("User with email already exists");
+            throw new ResourceNotFoundException("User with email already exists");
         }
 
         User user = toEntity(userRequestDTO);
@@ -46,7 +47,7 @@ public class UserServiceImplementation implements UserService{
 
             if (userRequestDTO.getTenantId() != null) {
                 tenant = tenantRepo.findById(userRequestDTO.getTenantId())
-                        .orElseThrow(() -> new RuntimeException("Tenant not found with id: " + userRequestDTO.getTenantId()));
+                        .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + userRequestDTO.getTenantId()));
             } else if (userRequestDTO.getTenantName() != null && !userRequestDTO.getTenantName().isBlank()) {
                 // Check for duplicate tenant
                 if (tenantRepo.findByEmail(userRequestDTO.getTenantEmail()).isPresent()) {
@@ -60,7 +61,7 @@ public class UserServiceImplementation implements UserService{
                         .build();
                 tenantRepo.save(tenant);
             } else {
-                throw new RuntimeException("Tenant information is required for PROVIDER role");
+                throw new ResourceNotFoundException("Tenant information is required for PROVIDER role");
             }
             user.setTenant(tenant);
         }
@@ -75,14 +76,14 @@ public class UserServiceImplementation implements UserService{
     @Override
     public void deleteUser(Long id) {
         User user = userRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         userRepo.delete(user);
     }
 
     @Override
     public UserResponseDTO updateUser(Long id, UserRequestDTO userRequestDTO) {
          User user = userRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         user.setName(userRequestDTO.getName());
         user.setEmail(userRequestDTO.getEmail());
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isBlank()) {
