@@ -1,6 +1,7 @@
 package com.example.SmartAppointmentBookingSystem.controller;
 
 import com.example.SmartAppointmentBookingSystem.dto.appointment.AppointmentRequestDTO;
+import jakarta.validation.Valid;
 import com.example.SmartAppointmentBookingSystem.dto.appointment.AppointmentResponseDTO;
 import com.example.SmartAppointmentBookingSystem.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping("/createAppointment")
-    public AppointmentResponseDTO createAppointment(@RequestBody AppointmentRequestDTO requestDTO) {
+    public AppointmentResponseDTO createAppointment(@Valid @RequestBody AppointmentRequestDTO requestDTO) {
         return appointmentService.createAppointment(requestDTO);
     }
 

@@ -36,7 +36,7 @@ public class TenantServiceImplementation implements TenantService{
     @Override
     public TenantResponseDTO addTenant(TenantRequestDTO tenantRequestDTO) {
        if (tenantRepo.findByEmail(tenantRequestDTO.getEmail()).isPresent()) {
-            throw new ResourceNotFoundException("Tenant with email already exists");
+            throw new com.example.SmartAppointmentBookingSystem.exception.DuplicateResourceException("Tenant with email already exists");
         }
 
         Tenant tenant = toEntity(tenantRequestDTO);
@@ -66,6 +66,7 @@ public class TenantServiceImplementation implements TenantService{
 
     private TenantResponseDTO toResponseDTO(Tenant tenant) {
         TenantResponseDTO dto = new TenantResponseDTO();
+        dto.setId(tenant.getId());
         dto.setName(tenant.getName());
         dto.setEmail(tenant.getEmail());
         dto.setAddress(tenant.getAddress());

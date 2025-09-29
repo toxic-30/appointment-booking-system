@@ -1,33 +1,36 @@
 package com.example.SmartAppointmentBookingSystem.controller;
 
-import org.springframework.security.core.Authentication;
+import com.example.SmartAppointmentBookingSystem.dto.auth.LoginRequestDTO;
+import com.example.SmartAppointmentBookingSystem.dto.auth.LoginResponseDTO;
+import com.example.SmartAppointmentBookingSystem.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import com.example.SmartAppointmentBookingSystem.util.JwtUtil;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-    }
-
     @PostMapping("/login")
-    public String login(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        String role = authentication.getAuthorities().iterator().next().getAuthority();
-        return jwtUtil.generateToken(email, role);
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("USER");
+
+        String token = jwtUtil.generateToken(request.getEmail(), role);
+
+        return ResponseEntity.ok(new LoginResponseDTO(token, role));
     }
 }

@@ -1,6 +1,5 @@
 package com.example.SmartAppointmentBookingSystem.config;
 
-import org.apache.catalina.filters.RateLimitFilter;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -9,25 +8,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 import com.example.SmartAppointmentBookingSystem.security.CustomAuthenticationProvider;
+import com.example.SmartAppointmentBookingSystem.security.RateLimitFilter;
 import com.example.SmartAppointmentBookingSystem.util.JwtAuthenticationFilter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableMethodSecurity   //required for @PreAuthorize to work
+@EnableMethodSecurity
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtFilter;
-    private final RateLimitFilter rateLimitFilter;
-    private final CustomAuthenticationProvider customAuthProvider;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter,RateLimitFilter rateLimitFilter, CustomAuthenticationProvider customAuthProvider) {
-        this.jwtFilter = jwtFilter;
-        this.rateLimitFilter = rateLimitFilter;
-        this.customAuthProvider = customAuthProvider;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -35,24 +24,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtFilter,
+            RateLimitFilter rateLimitFilter,
+            CustomAuthenticationProvider customAuthProvider
+    ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // no sessions
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .authenticationProvider(customAuthProvider)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()  // login/register open
-                .requestMatchers("/public/**").permitAll()    // any other open endpoints
-                .anyRequest().authenticated()                 // everything else requires JWT
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/public/**").permitAll()
+                .anyRequest().authenticated()
             );
-        // Add JWT filter before Spring Security’s own UsernamePasswordAuthenticationFilter
+
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

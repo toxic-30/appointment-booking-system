@@ -38,7 +38,7 @@ public class UserServiceImplementation implements UserService{
     public UserResponseDTO addUser(UserRequestDTO userRequestDTO) {
 
         if (userRepo.findByEmail(userRequestDTO.getEmail()).isPresent()) {
-            throw new ResourceNotFoundException("User with email already exists");
+            throw new com.example.SmartAppointmentBookingSystem.exception.DuplicateResourceException("User with email already exists");
         }
 
         User user = toEntity(userRequestDTO);
@@ -50,8 +50,8 @@ public class UserServiceImplementation implements UserService{
                         .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + userRequestDTO.getTenantId()));
             } else if (userRequestDTO.getTenantName() != null && !userRequestDTO.getTenantName().isBlank()) {
                 // Check for duplicate tenant
-                if (tenantRepo.findByEmail(userRequestDTO.getTenantEmail()).isPresent()) {
-                    throw new RuntimeException("Tenant with email already exists");
+                if (userRequestDTO.getTenantEmail() != null && tenantRepo.findByEmail(userRequestDTO.getTenantEmail()).isPresent()) {
+                    throw new com.example.SmartAppointmentBookingSystem.exception.DuplicateResourceException("Tenant with email already exists");
                 }
                 tenant = Tenant.builder()
                         .name(userRequestDTO.getTenantName())

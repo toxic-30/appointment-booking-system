@@ -7,6 +7,7 @@ import com.example.SmartAppointmentBookingSystem.entity.Notification;
 import com.example.SmartAppointmentBookingSystem.entity.User;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationStatus;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
+import com.example.SmartAppointmentBookingSystem.rabbitMQConfig.NotificationServiceQueue;
 import com.example.SmartAppointmentBookingSystem.repository.AppointmentRepository;
 import com.example.SmartAppointmentBookingSystem.repository.NotificationRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
@@ -29,7 +30,7 @@ public class NotificationServiceImplementation implements NotificationService {
     private final NotificationRepository notificationRepo;
     private final UserRepository userRepo;
     private final AppointmentRepository appointmentRepo;
-    private final EmailService emailService;        // sends email
+    private final NotificationServiceQueue emailService;        // sends notification
     private final RabbitTemplate rabbitTemplate;    // RabbitMQ template
     
         @Override
@@ -76,29 +77,55 @@ public class NotificationServiceImplementation implements NotificationService {
 
     @Override
     public void sendNotification(NotificationRequestDTO request) {
-        NotificationResponseDTO notification = createNotification(request, NotificationStatus.SENT);
-        // Send email (can integrate SMS / Push similarly)
-        emailService.sendEmail(
-                notification.getRecipientEmail(),
-                "Appointment Notification",
-                notification.getMessage()
-        );
-        // Optionally log message sent
-        System.out.println("Notification sent: " + notification.getMessage());
+        // Create the notification record as PENDING first. We'll attempt to send and then update status to SENT/FAILED.
+        NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
+        try {
+            // Send email (can integrate SMS / Push similarly)
+            emailService.sendNotification(request);
+            // update the persisted notification status to SENT
+            updateStatus(notification.getId(), NotificationStatus.SENT.name());
+            System.out.println("Notification sent: " + notification.getMessage());
+        } catch (Exception ex) {
+            // mark notification as FAILED and log
+            try {
+                updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+            } catch (Exception ignored) {
+                // if updating status fails, log and continue
+                System.err.println("Failed to update notification status to FAILED for id: " + notification.getId());
+            }
+            System.err.println("Failed to send notification: " + ex.getMessage());
+        }
     }
 
     @Override
     public void scheduleNotification(NotificationRequestDTO request) {
-        createNotification(request, NotificationStatus.PENDING);
-        // Send to RabbitMQ queue for async processing
-        rabbitTemplate.convertAndSend("notification.exchange", "notification.routingkey", request);
+        NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
+        try {
+            // Send to RabbitMQ queue for async processing - use centralized config constants
+            rabbitTemplate.convertAndSend(com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig.EXCHANGE,
+                    com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig.ROUTING_KEY, request);
+            // Optionally leave status as PENDING until processed by consumer
+        } catch (Exception ex) {
+            // mark notification failed if messaging fails
+            try {
+                updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+            } catch (Exception ignored) {
+                System.err.println("Failed to update notification status after rabbit failure for id: " + notification.getId());
+            }
+            System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
+        }
     }
 
     private NotificationResponseDTO toResponseDTO(Notification notification) {
         NotificationResponseDTO dto = new NotificationResponseDTO();
         dto.setId(notification.getId());
-        dto.setRecipientName(notification.getRecipient().getName());
-        dto.setRecipientEmail(notification.getRecipient().getEmail());
+        if (notification.getRecipient() != null) {
+            dto.setRecipientName(notification.getRecipient().getName());
+            dto.setRecipientEmail(notification.getRecipient().getEmail());
+        } else {
+            dto.setRecipientName(null);
+            dto.setRecipientEmail(null);
+        }
         dto.setAppointmentId(notification.getAppointment() != null ? notification.getAppointment().getId() : null);
         dto.setMessage(notification.getMessage());
         dto.setType(notification.getType());

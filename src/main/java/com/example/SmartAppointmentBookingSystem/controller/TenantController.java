@@ -5,6 +5,7 @@ import com.example.SmartAppointmentBookingSystem.dto.tenant.TenantResponseDTO;
 import com.example.SmartAppointmentBookingSystem.service.TenantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,14 +29,14 @@ public class TenantController {
     }
     // Add new tenant
     @PostMapping("/addTenant")
-    public ResponseEntity<TenantResponseDTO> addTenant(@RequestBody TenantRequestDTO tenantRequestDTO) {
+    public ResponseEntity<TenantResponseDTO> addTenant(@Valid @RequestBody TenantRequestDTO tenantRequestDTO) {
         return ResponseEntity.ok(tenantService.addTenant(tenantRequestDTO));
     }
     // Update tenant
     @PutMapping("/updateTenant/{id}")
     public ResponseEntity<TenantResponseDTO> updateTenant(
-            @PathVariable Long id,
-            @RequestBody TenantRequestDTO tenantRequestDTO
+        @PathVariable Long id,
+        @Valid @RequestBody TenantRequestDTO tenantRequestDTO
     ) {
         return ResponseEntity.ok(tenantService.updateTenant(id, tenantRequestDTO));
     }

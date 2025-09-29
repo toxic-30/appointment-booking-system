@@ -65,24 +65,41 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment savedAppointment = appointmentRepo.save(appointment);
 
-        // 1️ Send immediate notification to customer
-        NotificationRequestDTO notificationRequest = new NotificationRequestDTO();
-        notificationRequest.setRecipientId(customer.getId());
-        notificationRequest.setAppointmentId(savedAppointment.getId());
-        notificationRequest.setMessage("Your appointment has been booked successfully.");
-        notificationRequest.setType(NotificationType.EMAIL);
-        notificationRequest.setEvent(NotificationEvent.APPOINTMENT_BOOKED);
-        notificationService.sendNotification(notificationRequest);
+        // 1️ Send immediate notification to customer (best-effort, don't fail appointment on notification errors)
+        try {
+            NotificationRequestDTO notificationRequest = new NotificationRequestDTO();
+            notificationRequest.setRecipientId(customer.getId());
+            notificationRequest.setAppointmentId(savedAppointment.getId());
+            notificationRequest.setMessage("Your appointment has been booked successfully.");
+            notificationRequest.setType(NotificationType.EMAIL);
+            notificationRequest.setEvent(NotificationEvent.APPOINTMENT_BOOKED);
+            notificationService.sendNotification(notificationRequest);
+        } catch (Exception ex) {
+            // log and continue - appointment creation succeeded
+            System.err.println("Failed to send booking notification for appointment " + savedAppointment.getId() + ": " + ex.getMessage());
+        }
 
-        // 2️ Schedule reminder 1 day before
-        NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
-        reminderRequest.setRecipientId(customer.getId());
-        reminderRequest.setAppointmentId(savedAppointment.getId());
-        reminderRequest.setMessage("Reminder: Your appointment is tomorrow at " + savedAppointment.getAppointmentTime());
-        reminderRequest.setType(NotificationType.EMAIL);
-        reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
-        reminderRequest.setScheduledAt(savedAppointment.getAppointmentTime().minusDays(1));
-        notificationService.scheduleNotification(reminderRequest);
+        // 2️ Schedule reminder 1 day before (only if appointmentTime is present and reminder is in future)
+        if (savedAppointment.getAppointmentTime() != null) {
+            try {
+                NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
+                reminderRequest.setRecipientId(customer.getId());
+                reminderRequest.setAppointmentId(savedAppointment.getId());
+                reminderRequest.setMessage("Reminder: Your appointment is tomorrow at " + savedAppointment.getAppointmentTime());
+                reminderRequest.setType(NotificationType.EMAIL);
+                reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
+                // compute scheduled time safely
+                if (savedAppointment.getAppointmentTime().minusDays(1).isAfter(java.time.LocalDateTime.now())) {
+                    reminderRequest.setScheduledAt(savedAppointment.getAppointmentTime().minusDays(1));
+                    notificationService.scheduleNotification(reminderRequest);
+                } else {
+                    // if reminder time already passed, skip scheduling
+                    System.out.println("Skipping scheduling reminder because scheduled time is in the past for appointment " + savedAppointment.getId());
+                }
+            } catch (Exception ex) {
+                System.err.println("Failed to schedule reminder for appointment " + savedAppointment.getId() + ": " + ex.getMessage());
+            }
+        }
 
         return toResponseDTO(savedAppointment);
     }

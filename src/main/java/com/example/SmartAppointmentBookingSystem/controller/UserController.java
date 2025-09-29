@@ -6,6 +6,7 @@ import com.example.SmartAppointmentBookingSystem.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -32,13 +33,13 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
     @PostMapping("/addUser")
-    public ResponseEntity<UserResponseDTO> addUser(@RequestBody UserRequestDTO userRequestDTO) {
+    public ResponseEntity<UserResponseDTO> addUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         return ResponseEntity.ok(userService.addUser(userRequestDTO));
     }
     @PutMapping("/updateUser/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable Long id,
-            @RequestBody UserRequestDTO userRequestDTO
+            @Valid @RequestBody UserRequestDTO userRequestDTO
     ) {
         return ResponseEntity.ok(userService.updateUser(id, userRequestDTO));
     }

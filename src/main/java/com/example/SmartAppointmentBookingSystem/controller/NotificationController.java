@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.SmartAppointmentBookingSystem.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -23,20 +24,20 @@ public class NotificationController {
     // Create new notification
     @PostMapping
     public ResponseEntity<NotificationResponseDTO> createNotification(
-            @RequestBody NotificationRequestDTO requestDTO,
-            @RequestParam NotificationStatus status
+        @Valid @RequestBody NotificationRequestDTO requestDTO,
+        @RequestParam NotificationStatus status
     ) {
         return ResponseEntity.ok(notificationService.createNotification(requestDTO, status));
     }
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendNotification(@RequestBody NotificationRequestDTO requestDTO) {
+    public ResponseEntity<Void> sendNotification(@Valid @RequestBody NotificationRequestDTO requestDTO) {
         notificationService.sendNotification(requestDTO);
         return ResponseEntity.ok().build();
     }
     // Schedule notification via RabbitMQ (for reminders)
     @PostMapping("/schedule")
-    public ResponseEntity<Void> scheduleNotification(@RequestBody NotificationRequestDTO requestDTO) {
+    public ResponseEntity<Void> scheduleNotification(@Valid @RequestBody NotificationRequestDTO requestDTO) {
         notificationService.scheduleNotification(requestDTO);
         return ResponseEntity.ok().build();
     }

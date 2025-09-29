@@ -1,4 +1,4 @@
-package com.example.SmartAppointmentBookingSystem.dto;
+package com.example.SmartAppointmentBookingSystem.dto.notification;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

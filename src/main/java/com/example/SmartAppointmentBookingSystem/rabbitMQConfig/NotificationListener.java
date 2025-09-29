@@ -1,4 +1,4 @@
-package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
+package com.example.SmartAppointmentBookingSystem.rabbitMQConfig;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
@@ -16,14 +16,12 @@ public class NotificationListener {
     // Listen to the queue for scheduled reminders
     @RabbitListener(queues = "notification.queue")
     public void handleReminder(NotificationRequestDTO request) {
-        try {
-            // Send notification
-            notificationService.sendNotification(request);
-
-            System.out.println(" Reminder sent for appointmentId: " + request.getAppointmentId());
-        } catch (Exception e) {
-            System.err.println(" Failed to send reminder for appointmentId: " + request.getAppointmentId());
-            e.printStackTrace();
-        }
+    try {
+        notificationService.sendNotification(request);
+        System.out.println("Reminder sent for appointmentId: " + request.getAppointmentId());
+    } catch (Exception e) {
+        System.err.println("Failed to send reminder for appointmentId: " + request.getAppointmentId());
+        e.printStackTrace();
+    }
     }
 }
