@@ -42,9 +42,7 @@ public class SecurityConfig {
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .authenticationProvider(customAuthProvider)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/public/**").permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,27 +1,31 @@
 package com.example.SmartAppointmentBookingSystem.rabbitMQConfig;
 
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
 import com.example.SmartAppointmentBookingSystem.dto.notification.NotificationRequestDTO;
 import com.example.SmartAppointmentBookingSystem.service.NotificationService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
 public class NotificationListener {
 
     private final NotificationService notificationService;
-
-    // Listen to the queue for scheduled reminders
     @RabbitListener(queues = "notification.queue")
-    public void handleReminder(NotificationRequestDTO request) {
-    try {
-        notificationService.sendNotification(request);
-        System.out.println("Reminder sent for appointmentId: " + request.getAppointmentId());
-    } catch (Exception e) {
-        System.err.println("Failed to send reminder for appointmentId: " + request.getAppointmentId());
-        e.printStackTrace();
-    }
+    public void handleNotificationQueue(NotificationRequestDTO request) {
+        try {
+            // Only send if the scheduled time is now or in the past
+            if (request.getScheduledAt() == null || !request.getScheduledAt().isAfter(LocalDateTime.now())) {
+                notificationService.sendNotification(request);
+            } else {
+                // If the scheduled time is in the future, leave it for scheduled task
+                System.out.println("Notification scheduled for future: " + request.getScheduledAt());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to process notification for appointment " + request.getAppointmentId());
+            e.printStackTrace();
+        }
     }
 }

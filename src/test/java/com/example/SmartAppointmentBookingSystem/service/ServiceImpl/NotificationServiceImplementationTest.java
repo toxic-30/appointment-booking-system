@@ -98,9 +98,9 @@ class NotificationServiceImplementationTest {
         User user = new User();
         when(userRepo.findById(2L)).thenReturn(Optional.of(user));
         when(notificationRepo.save(any())).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(emailService).sendNotification(req);
+        doNothing().when(emailService).processNotification(req);
         service.sendNotification(req);
-        verify(emailService, times(1)).sendNotification(req);
+        verify(emailService, times(1)).processNotification(req);
     }
 
     @Test

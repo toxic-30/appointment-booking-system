@@ -1,5 +1,6 @@
 package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -40,17 +41,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Fetch related entities
         User provider = userRepo.findById(requestDTO.getProviderId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Provider not found with id: " + requestDTO.getProviderId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found with id: " + requestDTO.getProviderId()));
         User customer = userRepo.findById(requestDTO.getCustomerId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Customer not found with id: " + requestDTO.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + requestDTO.getCustomerId()));
         ProvidedService service = serviceRepo.findById(requestDTO.getServiceId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Service not found with id: " + requestDTO.getServiceId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + requestDTO.getServiceId()));
         Tenant tenant = tenantRepo.findById(requestDTO.getTenantId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Tenant not found with id: " + requestDTO.getTenantId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + requestDTO.getTenantId()));
 
         // Create appointment
         Appointment appointment = Appointment.builder()
@@ -65,7 +62,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment savedAppointment = appointmentRepo.save(appointment);
 
-        // 1️ Send immediate notification to customer (best-effort, don't fail appointment on notification errors)
+        // 1️ Send immediate notification
         try {
             NotificationRequestDTO notificationRequest = new NotificationRequestDTO();
             notificationRequest.setRecipientId(customer.getId());
@@ -75,58 +72,61 @@ public class AppointmentServiceImpl implements AppointmentService {
             notificationRequest.setEvent(NotificationEvent.APPOINTMENT_BOOKED);
             notificationService.sendNotification(notificationRequest);
         } catch (Exception ex) {
-            // log and continue - appointment creation succeeded
             System.err.println("Failed to send booking notification for appointment " + savedAppointment.getId() + ": " + ex.getMessage());
         }
 
-        // 2️ Schedule reminder 1 day before (only if appointmentTime is present and reminder is in future)
+        // 2️ Schedule reminder 1 day before appointment
         if (savedAppointment.getAppointmentTime() != null) {
-            try {
-                NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
-                reminderRequest.setRecipientId(customer.getId());
-                reminderRequest.setAppointmentId(savedAppointment.getId());
-                reminderRequest.setMessage("Reminder: Your appointment is tomorrow at " + savedAppointment.getAppointmentTime());
-                reminderRequest.setType(NotificationType.EMAIL);
-                reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
-                // compute scheduled time safely
-                if (savedAppointment.getAppointmentTime().minusDays(1).isAfter(java.time.LocalDateTime.now())) {
-                    reminderRequest.setScheduledAt(savedAppointment.getAppointmentTime().minusDays(1));
+            LocalDateTime reminderTime = savedAppointment.getAppointmentTime().minusDays(1);
+            if (reminderTime.isAfter(LocalDateTime.now())) {
+                try {
+                    NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
+                    reminderRequest.setRecipientId(customer.getId());
+                    reminderRequest.setAppointmentId(savedAppointment.getId());
+                    reminderRequest.setMessage("Reminder: Your appointment is tomorrow at " + savedAppointment.getAppointmentTime());
+                    reminderRequest.setType(NotificationType.EMAIL);
+                    reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
+                    reminderRequest.setScheduledAt(reminderTime);
                     notificationService.scheduleNotification(reminderRequest);
-                } else {
-                    // if reminder time already passed, skip scheduling
-                    System.out.println("Skipping scheduling reminder because scheduled time is in the past for appointment " + savedAppointment.getId());
+                } catch (Exception ex) {
+                    System.err.println("Failed to schedule reminder for appointment " + savedAppointment.getId() + ": " + ex.getMessage());
                 }
-            } catch (Exception ex) {
-                System.err.println("Failed to schedule reminder for appointment " + savedAppointment.getId() + ": " + ex.getMessage());
+            } else {
+                System.out.println("Skipping reminder scheduling as the time is already passed for appointment " + savedAppointment.getId());
             }
         }
 
         return toResponseDTO(savedAppointment);
     }
+
     @Override
     public AppointmentResponseDTO getAppointmentById(Long id) {
         Appointment appointment = appointmentRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
         return toResponseDTO(appointment);
     }
+
     @Override
     public List<AppointmentResponseDTO> getAppointmentsByCustomer(Long customerId) {
         return appointmentRepo.findByCustomerId(customerId)
                 .stream().map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
     @Override
     public List<AppointmentResponseDTO> getAppointmentsByProvider(Long providerId) {
         return appointmentRepo.findByProviderId(providerId)
                 .stream().map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
     @Override
     public List<AppointmentResponseDTO> getAppointmentsByTenant(Long tenantId) {
         return appointmentRepo.findByTenantId(tenantId)
                 .stream().map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
     @Override
     public AppointmentResponseDTO updateAppointmentStatus(Long id, String status) {
         Appointment appointment = appointmentRepo.findById(id)
@@ -136,15 +136,17 @@ public class AppointmentServiceImpl implements AppointmentService {
         } catch (IllegalArgumentException e) {
             throw new ResourceNotFoundException("Invalid status: " + status);
         }
-        Appointment updated = appointmentRepo.save(appointment);
-        return toResponseDTO(updated);
+        return toResponseDTO(appointmentRepo.save(appointment));
     }
+
     @Override
     public void deleteAppointment(Long id) {
         if (!appointmentRepo.existsById(id)) {
-            throw new ResourceNotFoundException("Appointment not found with id: " + id);   }
+            throw new ResourceNotFoundException("Appointment not found with id: " + id);
+        }
         appointmentRepo.deleteById(id);
     }
+
     // Convert Appointment entity to DTO
     private AppointmentResponseDTO toResponseDTO(Appointment appointment) {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();

@@ -12,16 +12,13 @@ public class ProvidedServiceRequestDTO {
 
     @NotBlank
     private String name;
-
+    @NotBlank
     private String description;
-
     @NotNull
     @Min(value = 0, message = "Price must be non-negative")
     private Double price;
-
     @Min(value = 0, message = "Duration must be non-negative")
     private int durationMinutes;
-
     @NotNull
     private Long tenantId; // link service to a tenant
 
