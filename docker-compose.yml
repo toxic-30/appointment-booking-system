@@ -1,0 +1,42 @@
+# Use root/example as user/password credentials
+services:
+  db:
+    image: mysql
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: smart_appointment_booking_system
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-broker
+#    ports:
+#      - "5672:5672"   # RabbitMQ (AMQP)
+#      - "15672:15672" # Management UI
+    restart: unless-stopped  
+
+  springboot-app:
+    image: smartappointmentbookingsystem-image
+    container_name: smartappointmentbookingsystem-app
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/smart_appointment_booking_system
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+volumes:
+  mysql_data:    
+
+
