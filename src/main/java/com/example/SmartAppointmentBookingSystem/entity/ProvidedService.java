@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ProvidedService {
 
     @Id

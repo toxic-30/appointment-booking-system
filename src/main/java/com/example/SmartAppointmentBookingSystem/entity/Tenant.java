@@ -1,15 +1,18 @@
 package com.example.SmartAppointmentBookingSystem.entity;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Tenant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +23,6 @@ public class Tenant {
     @Column(unique = true, nullable = false)
     private String email;
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<User> users = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

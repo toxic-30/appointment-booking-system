@@ -50,16 +50,14 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + requestDTO.getTenantId()));
 
         // Create appointment
-        Appointment appointment = Appointment.builder()
-                .provider(provider)
-                .customer(customer)
-                .tenant(tenant)
-                .service(service)
-                .appointmentTime(requestDTO.getAppointmentTime())
-                .notes(requestDTO.getNotes())
-                .status(AppointmentStatus.PENDING)
-                .build();
-
+        Appointment appointment = new Appointment();
+            appointment.setProvider(provider);
+            appointment.setCustomer(customer);
+            appointment.setTenant(tenant);
+            appointment.setService(service);
+            appointment.setAppointmentTime(requestDTO.getAppointmentTime());
+            appointment.setNotes(requestDTO.getNotes());
+            appointment.setStatus(AppointmentStatus.PENDING);
         Appointment savedAppointment = appointmentRepo.save(appointment);
 
         // 1️ Send immediate notification

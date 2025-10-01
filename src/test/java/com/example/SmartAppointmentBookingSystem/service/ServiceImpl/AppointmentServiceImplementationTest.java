@@ -51,15 +51,14 @@ class AppointmentServiceImplTest {
         when(serviceRepo.findById(3L)).thenReturn(Optional.of(providedService));
         when(tenantRepo.findById(4L)).thenReturn(Optional.of(tenant));
 
-        Appointment appointment = Appointment.builder()
-                .provider(provider)
-                .customer(customer)
-                .tenant(tenant)
-                .service(providedService)
-                .appointmentTime(req.getAppointmentTime())
-                .notes(req.getNotes())
-                .status(AppointmentStatus.PENDING)
-                .build();
+        Appointment appointment = new Appointment();
+        appointment.setProvider(provider);
+        appointment.setCustomer(customer);
+        appointment.setService(providedService);
+        appointment.setTenant(tenant);
+        appointment.setAppointmentTime(req.getAppointmentTime());
+        appointment.setNotes(req.getNotes());
+        appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setId(10L);
 
         when(appointmentRepo.save(any())).thenReturn(appointment);
@@ -96,17 +95,16 @@ class AppointmentServiceImplTest {
         when(serviceRepo.findById(3L)).thenReturn(Optional.of(providedService));
         when(tenantRepo.findById(4L)).thenReturn(Optional.of(tenant));
 
-        Appointment appointment = Appointment.builder()
-                .provider(provider)
-                .customer(customer)
-                .tenant(tenant)
-                .service(providedService)
-                .appointmentTime(req.getAppointmentTime())
-                .notes(req.getNotes())
-                .status(AppointmentStatus.PENDING)
-                .build();
+        Appointment appointment = new Appointment();
+        appointment.setProvider(provider);
+        appointment.setCustomer(customer);
+        appointment.setService(providedService);
+        appointment.setTenant(tenant);
+        appointment.setAppointmentTime(req.getAppointmentTime());
+        appointment.setNotes(req.getNotes());
+        appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setId(11L);
-
+        
         when(appointmentRepo.save(any())).thenReturn(appointment);
 
         doThrow(new RuntimeException("email failure")).when(notificationService).sendNotification(any(NotificationRequestDTO.class));
@@ -122,7 +120,14 @@ class AppointmentServiceImplTest {
 
     @Test
     void getAppointmentById_found() {
-        Appointment appointment = Appointment.builder().id(1L).provider(new User()).customer(new User()).service(new ProvidedService()).tenant(new Tenant()).appointmentTime(LocalDateTime.now()).status(AppointmentStatus.PENDING).build();
+        Appointment appointment = new Appointment();
+        appointment.setId(1L); // usually JPA will generate this automatically
+        appointment.setProvider(new User());
+        appointment.setCustomer(new User());
+        appointment.setService(new ProvidedService());
+        appointment.setTenant(new Tenant());
+        appointment.setAppointmentTime(LocalDateTime.now());
+        appointment.setStatus(AppointmentStatus.PENDING);
         when(appointmentRepo.findById(1L)).thenReturn(Optional.of(appointment));
         AppointmentResponseDTO dto = service.getAppointmentById(1L);
         assertEquals(1L, dto.getId());
@@ -136,7 +141,14 @@ class AppointmentServiceImplTest {
 
     @Test
     void updateAppointmentStatus_valid() {
-        Appointment appointment = Appointment.builder().id(1L).status(AppointmentStatus.PENDING).provider(new User()).customer(new User()).service(new ProvidedService()).tenant(new Tenant()).appointmentTime(LocalDateTime.now()).build();
+        Appointment appointment = new Appointment();
+        appointment.setId(1L); // usually JPA will generate this automatically
+        appointment.setProvider(new User());
+        appointment.setCustomer(new User());
+        appointment.setService(new ProvidedService());
+        appointment.setTenant(new Tenant());
+        appointment.setAppointmentTime(LocalDateTime.now());
+        appointment.setStatus(AppointmentStatus.PENDING);
         when(appointmentRepo.findById(1L)).thenReturn(Optional.of(appointment));
         when(appointmentRepo.save(any())).thenAnswer(i -> i.getArgument(0));
         AppointmentResponseDTO dto = service.updateAppointmentStatus(1L, "BOOKED");
@@ -145,7 +157,14 @@ class AppointmentServiceImplTest {
 
     @Test
     void updateAppointmentStatus_invalid() {
-        Appointment appointment = Appointment.builder().id(1L).status(AppointmentStatus.PENDING).provider(new User()).customer(new User()).service(new ProvidedService()).tenant(new Tenant()).appointmentTime(LocalDateTime.now()).build();
+        Appointment appointment = new Appointment();
+        appointment.setId(1L); // usually JPA will generate this automatically
+        appointment.setProvider(new User());
+        appointment.setCustomer(new User());
+        appointment.setService(new ProvidedService());
+        appointment.setTenant(new Tenant());
+        appointment.setAppointmentTime(LocalDateTime.now());
+        appointment.setStatus(AppointmentStatus.PENDING);
         when(appointmentRepo.findById(1L)).thenReturn(Optional.of(appointment));
         assertThrows(ResourceNotFoundException.class, () -> service.updateAppointmentStatus(1L, "INVALID"));
     }
@@ -165,7 +184,13 @@ class AppointmentServiceImplTest {
 
     @Test
     void getAppointmentsByCustomer() {
-        Appointment appointment = Appointment.builder().id(1L).provider(new User()).customer(new User()).service(new ProvidedService()).tenant(new Tenant()).appointmentTime(LocalDateTime.now()).build();
+        Appointment appointment = new Appointment();
+        appointment.setId(1L); // usually JPA will generate this automatically
+        appointment.setProvider(new User());
+        appointment.setCustomer(new User());
+        appointment.setService(new ProvidedService());
+        appointment.setTenant(new Tenant());
+        appointment.setAppointmentTime(LocalDateTime.now());
         when(appointmentRepo.findByCustomerId(2L)).thenReturn(List.of(appointment));
         List<AppointmentResponseDTO> dtos = service.getAppointmentsByCustomer(2L);
         assertEquals(1, dtos.size());
@@ -173,7 +198,13 @@ class AppointmentServiceImplTest {
 
     @Test
     void getAppointmentsByProvider() {
-        Appointment appointment = Appointment.builder().id(1L).provider(new User()).customer(new User()).service(new ProvidedService()).tenant(new Tenant()).appointmentTime(LocalDateTime.now()).build();
+        Appointment appointment = new Appointment();
+        appointment.setId(1L); // usually JPA will generate this automatically
+        appointment.setProvider(new User());
+        appointment.setCustomer(new User());
+        appointment.setService(new ProvidedService());
+        appointment.setTenant(new Tenant());
+        appointment.setAppointmentTime(LocalDateTime.now());
         when(appointmentRepo.findByProviderId(1L)).thenReturn(List.of(appointment));
         List<AppointmentResponseDTO> dtos = service.getAppointmentsByProvider(1L);
         assertEquals(1, dtos.size());
@@ -181,7 +212,13 @@ class AppointmentServiceImplTest {
 
     @Test
     void getAppointmentsByTenant() {
-        Appointment appointment = Appointment.builder().id(1L).provider(new User()).customer(new User()).service(new ProvidedService()).tenant(new Tenant()).appointmentTime(LocalDateTime.now()).build();
+        Appointment appointment = new Appointment();
+        appointment.setId(1L); 
+        appointment.setProvider(new User());
+        appointment.setCustomer(new User());
+        appointment.setService(new ProvidedService());
+        appointment.setTenant(new Tenant());
+        appointment.setAppointmentTime(LocalDateTime.now());
         when(appointmentRepo.findByTenantId(1L)).thenReturn(List.of(appointment));
         List<AppointmentResponseDTO> dtos = service.getAppointmentsByTenant(1L);
         assertEquals(1, dtos.size());

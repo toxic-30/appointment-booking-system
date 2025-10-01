@@ -53,22 +53,19 @@ public class UserServiceImplementation implements UserService{
                 if (userRequestDTO.getTenantEmail() != null && tenantRepo.findByEmail(userRequestDTO.getTenantEmail()).isPresent()) {
                     throw new com.example.SmartAppointmentBookingSystem.exception.DuplicateResourceException("Tenant with email already exists");
                 }
-                tenant = Tenant.builder()
-                        .name(userRequestDTO.getTenantName())
-                        .address(userRequestDTO.getTenantAddress())
-                        .contactNumber(userRequestDTO.getTenantContactNumber())
-                        .email(userRequestDTO.getTenantEmail())
-                        .build();
+                tenant = new Tenant();
+                    tenant.setName(userRequestDTO.getTenantName());
+                    tenant.setAddress(userRequestDTO.getTenantAddress());
+                    tenant.setContactNumber(userRequestDTO.getTenantContactNumber());
+                    tenant.setEmail(userRequestDTO.getTenantEmail());
                 tenantRepo.save(tenant);
             } else {
                 throw new ResourceNotFoundException("Tenant information is required for PROVIDER role");
             }
             user.setTenant(tenant);
         }
-
         user.setUserCode(generateUserCode(user.getRole()));
         user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword())); // Secure password
-
         User savedUser = userRepo.save(user);
         return toResponseDTO(savedUser);
     }

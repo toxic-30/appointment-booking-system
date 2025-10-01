@@ -8,7 +8,6 @@ import com.example.SmartAppointmentBookingSystem.entity.Notification;
 import com.example.SmartAppointmentBookingSystem.entity.User;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationStatus;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
-import com.example.SmartAppointmentBookingSystem.rabbitMQConfig.NotificationServiceQueue;
 import com.example.SmartAppointmentBookingSystem.repository.AppointmentRepository;
 import com.example.SmartAppointmentBookingSystem.repository.NotificationRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;

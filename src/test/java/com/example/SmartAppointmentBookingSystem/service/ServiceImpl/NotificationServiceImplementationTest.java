@@ -5,113 +5,125 @@ import com.example.SmartAppointmentBookingSystem.dto.notification.NotificationRe
 import com.example.SmartAppointmentBookingSystem.entity.Appointment;
 import com.example.SmartAppointmentBookingSystem.entity.Notification;
 import com.example.SmartAppointmentBookingSystem.entity.User;
-import com.example.SmartAppointmentBookingSystem.enums.NotificationEvent;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationStatus;
+import com.example.SmartAppointmentBookingSystem.enums.NotificationType;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
-import com.example.SmartAppointmentBookingSystem.rabbitMQConfig.NotificationServiceQueue;
 import com.example.SmartAppointmentBookingSystem.repository.AppointmentRepository;
 import com.example.SmartAppointmentBookingSystem.repository.NotificationRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
+import com.example.SmartAppointmentBookingSystem.service.EmailService;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
 class NotificationServiceImplementationTest {
 
-    @Mock NotificationRepository notificationRepo;
-    @Mock UserRepository userRepo;
-    @Mock AppointmentRepository appointmentRepo;
-    @Mock NotificationServiceQueue emailService;
-    @Mock RabbitTemplate rabbitTemplate;
+    @Mock private NotificationRepository notificationRepo;
+    @Mock private UserRepository userRepo;
+    @Mock private AppointmentRepository appointmentRepo;
+    @Mock private EmailService emailService;
+    @Mock private RabbitTemplate rabbitTemplate;
 
-    @InjectMocks NotificationServiceImplementation service;
+    @InjectMocks private NotificationServiceImplementation notificationService;
 
-    @Test
-    void getNotificationById_found() {
-        Notification notification = Notification.builder().id(1L).recipient(new User()).build();
-        when(notificationRepo.findById(1L)).thenReturn(Optional.of(notification));
-        NotificationResponseDTO dto = service.getNotificationById(1L);
-        assertEquals(1L, dto.getId());
+    private User user;
+    private Appointment appointment;
+    private NotificationRequestDTO request;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        user = new User();
+        user.setId(1L);
+        user.setName("John Doe");
+        user.setEmail("john@example.com");
+        appointment = new Appointment();
+        appointment.setId(2L);
+        appointment.setAppointmentTime(LocalDateTime.now().plusDays(2));
+        request = new NotificationRequestDTO();
+        request.setRecipientId(1L);
+        request.setAppointmentId(2L);
+        request.setMessage("Reminder");
+        request.setType(NotificationType.EMAIL);
     }
 
     @Test
-    void getNotificationById_notFound() {
+    void testGetNotificationById_Success() {
+        Notification notification = Notification.builder().id(1L).recipient(user).message("Hello").status(NotificationStatus.SENT).build();
+        when(notificationRepo.findById(1L)).thenReturn(Optional.of(notification));
+
+        NotificationResponseDTO response = notificationService.getNotificationById(1L);
+        assertEquals("Hello", response.getMessage());
+        assertEquals("John Doe", response.getRecipientName());
+    }
+
+    @Test
+    void testGetNotificationById_NotFound() {
         when(notificationRepo.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getNotificationById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> notificationService.getNotificationById(1L));
     }
 
     @Test
-    void createNotification_withAppointment() {
-        NotificationRequestDTO req = new NotificationRequestDTO();
-        req.setRecipientId(2L);
-        req.setAppointmentId(3L);
-        req.setMessage("msg");
-        req.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
-        req.setScheduledAt(LocalDateTime.now());
+    void testCreateNotification_Success() {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(appointmentRepo.findById(2L)).thenReturn(Optional.of(appointment));
+        when(notificationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User user = new User();
-        Appointment appt = new Appointment();
-        when(userRepo.findById(2L)).thenReturn(Optional.of(user));
-        when(appointmentRepo.findById(3L)).thenReturn(Optional.of(appt));
-        when(notificationRepo.save(any())).thenAnswer(i -> i.getArgument(0));
-
-    NotificationResponseDTO dto = service.createNotification(req, NotificationStatus.SENT);
-    assertEquals("msg", dto.getMessage());
-    assertEquals(NotificationStatus.SENT, dto.getStatus());
-    // the appointment object in test has no id set, so appointmentId in response should be null
-    assertNull(dto.getAppointmentId());
+        NotificationResponseDTO response = notificationService.createNotification(request, NotificationStatus.PENDING);
+        assertEquals("Reminder", response.getMessage());
+        assertEquals(NotificationStatus.PENDING, response.getStatus());
     }
 
     @Test
-    void updateStatus_valid() {
-        User recipient = new User(); recipient.setId(2L); recipient.setName("User"); recipient.setEmail("u@e.com");
-        Notification notification = Notification.builder().id(1L).status(NotificationStatus.PENDING).recipient(recipient).build();
-        when(notificationRepo.findById(1L)).thenReturn(Optional.of(notification));
-        when(notificationRepo.save(any())).thenAnswer(i -> i.getArgument(0));
-        NotificationResponseDTO dto = service.updateStatus(1L, "SENT");
-        assertEquals(NotificationStatus.SENT, dto.getStatus());
-    }
-
-    @Test
-    void updateStatus_invalid() {
+    void testUpdateStatus_Success() {
         Notification notification = Notification.builder().id(1L).status(NotificationStatus.PENDING).build();
         when(notificationRepo.findById(1L)).thenReturn(Optional.of(notification));
-        assertThrows(ResourceNotFoundException.class, () -> service.updateStatus(1L, "INVALID"));
+        when(notificationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        NotificationResponseDTO response = notificationService.updateStatus(1L, "SENT");
+        assertEquals(NotificationStatus.SENT, response.getStatus());
     }
 
     @Test
-    void sendNotification_callsEmailService() {
-        NotificationRequestDTO req = new NotificationRequestDTO();
-        req.setRecipientId(2L);
-        User user = new User();
-        when(userRepo.findById(2L)).thenReturn(Optional.of(user));
-        when(notificationRepo.save(any())).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(emailService).processNotification(req);
-        service.sendNotification(req);
-        verify(emailService, times(1)).processNotification(req);
+    void testUpdateStatus_Invalid() {
+        Notification notification = Notification.builder().id(1L).status(NotificationStatus.PENDING).build();
+        when(notificationRepo.findById(1L)).thenReturn(Optional.of(notification));
+
+        assertThrows(ResourceNotFoundException.class, () -> notificationService.updateStatus(1L, "INVALID"));
     }
 
     @Test
-    void scheduleNotification_callsRabbitTemplate() {
-        NotificationRequestDTO req = new NotificationRequestDTO();
-        req.setRecipientId(2L);
-        User user = new User();
-        when(userRepo.findById(2L)).thenReturn(Optional.of(user));
-        when(notificationRepo.save(any())).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), eq(req));
-        service.scheduleNotification(req);
-        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), eq(req));
+    void testSendNotification_Success() {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(appointmentRepo.findById(2L)).thenReturn(Optional.of(appointment));
+        when(notificationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(notificationRepo.findById(anyLong())).thenReturn(Optional.of(Notification.builder().id(1L).build()));
+
+        doNothing().when(emailService).send(any());
+        notificationService.sendNotification(request);
+
+        verify(emailService, times(1)).send(any());
+    }
+
+    @Test
+    void testScheduleNotification_Success() {
+        when(appointmentRepo.findById(2L)).thenReturn(Optional.of(appointment));
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(notificationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        notificationService.scheduleNotification(request);
+        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), eq(request));
     }
 }
