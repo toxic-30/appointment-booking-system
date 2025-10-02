@@ -1,5 +1,6 @@
 package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
+import com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig;
 import com.example.SmartAppointmentBookingSystem.dto.notification.EmailMessageDTO;
 import com.example.SmartAppointmentBookingSystem.dto.notification.NotificationRequestDTO;
 import com.example.SmartAppointmentBookingSystem.dto.notification.NotificationResponseDTO;
@@ -76,63 +77,40 @@ public class NotificationServiceImplementation implements NotificationService {
 
     @Override
     public void sendNotification(NotificationRequestDTO request) {
-
-    if (request.getScheduledAt() == null) {
-        request.setScheduledAt(LocalDateTime.now());
-    }
-    NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
-    try {
-
-        // 3️⃣ Fetch recipient's email
-        User recipient = userRepo.findById(request.getRecipientId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with id: " + request.getRecipientId()));
-
-        EmailMessageDTO emailMessage = new EmailMessageDTO();
-        emailMessage.setTo(recipient.getEmail());
-        emailMessage.setSubject("Appointment Notification"); 
-        emailMessage.setBody(request.getMessage());
-        emailService.send(emailMessage);
-        updateStatus(notification.getId(), NotificationStatus.SENT.name());
-        System.out.println("Notification sent: " + notification.getMessage());
-    } catch (Exception ex) {
-        try {
+    // Store in DB as PENDING
+       NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
+       try {
+            User recipient = userRepo.findById(request.getRecipientId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            EmailMessageDTO emailMessage = new EmailMessageDTO();
+            emailMessage.setTo(recipient.getEmail());
+            emailMessage.setSubject("Appointment Notification");
+            emailMessage.setBody(request.getMessage());
+            emailService.send(emailMessage);
+            updateStatus(notification.getId(), NotificationStatus.SENT.name());
+            System.out.println("Notification sent: " + notification.getMessage());
+        } catch (Exception ex) {
             updateStatus(notification.getId(), NotificationStatus.FAILED.name());
-        } catch (Exception ignored) { }
-
-        System.err.println("Failed to send notification: " + ex.getMessage());
+            System.err.println("Failed to send notification: " + ex.getMessage());
+        }
     }
-}
-
     @Override
     public void scheduleNotification(NotificationRequestDTO request) {
-        // Determine scheduled time if not set
-        if (request.getScheduledAt() == null && request.getAppointmentId() != null) {
-            Appointment appt = appointmentRepo.findById(request.getAppointmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
-            LocalDateTime reminderTime = appt.getAppointmentTime().minusDays(1);
-            if (reminderTime.isAfter(LocalDateTime.now())) {
-                request.setScheduledAt(reminderTime);
-            }
-        }
+      NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
+      try {
+        // Send to RabbitMQ for async processing
+        rabbitTemplate.convertAndSend(
+            RabbitMQConfig.EXCHANGE,
+            RabbitMQConfig.ROUTING_KEY,
+            request
+        );
+        System.out.println("Scheduled notification sent to RabbitMQ: " + notification.getMessage());
+      } catch (Exception ex) {
+        updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+        System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
+       }
+   }
 
-        NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
-
-        try {
-            // Send to RabbitMQ for async processing
-            rabbitTemplate.convertAndSend(
-                    com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig.EXCHANGE,
-                    com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig.ROUTING_KEY,
-                    request
-            );
-        } catch (Exception ex) {
-            try {
-                updateStatus(notification.getId(), NotificationStatus.FAILED.name());
-            } catch (Exception ignored) {
-            }
-            System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
-        }
-    }
 
     private NotificationResponseDTO toResponseDTO(Notification notification) {
         NotificationResponseDTO dto = new NotificationResponseDTO();
