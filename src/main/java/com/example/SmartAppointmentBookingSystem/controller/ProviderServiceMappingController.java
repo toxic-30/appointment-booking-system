@@ -16,7 +16,7 @@ public class ProviderServiceMappingController {
 
     private final ProviderServiceMappingService mappingService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ProviderServiceMapping> createMapping(@RequestBody ProviderServiceMapping mapping) {
         return ResponseEntity.ok(mappingService.createMapping(mapping));
     }

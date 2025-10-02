@@ -1,34 +1,53 @@
-# Use root/example as user/password credentials
 services:
   db:
-    image: mysql
+    image: mysql:8
+    container_name: mysql-db
     restart: always
     ports:
       - '3306:3306'
     environment:
-      MYSQL_USERNAME: root
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: smart_appointment_booking_system
+      MYSQL_DATABASE: appointmentbookingsystem
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   rabbitmq:
-    image: rabbitmq:3-management
+    build:
+      context: .
+      dockerfile: Dockerfile.rabbitmq
+    image: rabbitmq-with-delayed-plugin
     container_name: rabbitmq-broker
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 #    ports:
-#      - "5672:5672"   # RabbitMQ (AMQP)
-#      - "15672:15672" # Management UI
-    restart: unless-stopped  
+#      - "5672:5672"      # AMQP
+#      - "15672:15672"    # Management UI
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   springboot-app:
     image: smartappointmentbookingsystem-image
     container_name: smartappointmentbookingsystem-app
     restart: always
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8085:8085"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/smart_appointment_booking_system
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/appointmentbookingsystem
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -37,6 +56,4 @@ services:
       SPRING_RABBITMQ_PASSWORD: guest
 
 volumes:
-  mysql_data:    
-
-
+  mysql_data:

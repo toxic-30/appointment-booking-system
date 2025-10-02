@@ -2,9 +2,15 @@ package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
+import com.example.SmartAppointmentBookingSystem.entity.ProvidedService;
 import com.example.SmartAppointmentBookingSystem.entity.ProviderServiceMapping;
+import com.example.SmartAppointmentBookingSystem.entity.Tenant;
+import com.example.SmartAppointmentBookingSystem.entity.User;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
+import com.example.SmartAppointmentBookingSystem.repository.ProvidedServiceRepository;
 import com.example.SmartAppointmentBookingSystem.repository.ProviderServiceMappingRepository;
+import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
+import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.ProviderServiceMappingService;
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 public class ProviderServiceMappingServiceImpl implements ProviderServiceMappingService {
 
     private final ProviderServiceMappingRepository repository;
+    private final ProvidedServiceRepository serviceRepo;
+    private final UserRepository userRepo;
+    private final TenantRepository tenantRepo;
 
     @Override
     public ProviderServiceMapping getMappingById(Long id) {
@@ -50,7 +59,16 @@ public class ProviderServiceMappingServiceImpl implements ProviderServiceMapping
 
     @Override
     public ProviderServiceMapping createMapping(ProviderServiceMapping mapping) {
-         return repository.save(mapping);
+        User provider = userRepo.findById(mapping.getProvider().getId())
+        .orElseThrow(() -> new RuntimeException("Provider not found"));
+        ProvidedService service = serviceRepo.findById(mapping.getService().getId())
+        .orElseThrow(() -> new RuntimeException("Service not found"));
+        Tenant tenant = tenantRepo.findById(mapping.getTenant().getId())
+        .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        mapping.setProvider(provider);
+        mapping.setService(service);
+        mapping.setTenant(tenant);
+        return repository.save(mapping);
     }
 
     @Override
