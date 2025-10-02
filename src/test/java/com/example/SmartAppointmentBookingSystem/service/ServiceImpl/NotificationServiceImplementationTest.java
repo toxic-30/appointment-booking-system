@@ -106,15 +106,32 @@ class NotificationServiceImplementationTest {
 
     @Test
     void testSendNotification_Success() {
-        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
-        when(appointmentRepo.findById(2L)).thenReturn(Optional.of(appointment));
-        when(notificationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(notificationRepo.findById(anyLong())).thenReturn(Optional.of(Notification.builder().id(1L).build()));
+        // Arrange
+    when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+    when(appointmentRepo.findById(2L)).thenReturn(Optional.of(appointment));
 
-        doNothing().when(emailService).send(any());
-        notificationService.sendNotification(request);
+    // Capture the notification being saved
+    ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
+    when(notificationRepo.save(notificationCaptor.capture())).thenAnswer(invocation -> {
+        Notification n = invocation.getArgument(0);
+        n.setId(100L); // simulate DB generated ID
+        return n;
+    });
 
-        verify(emailService, times(1)).send(any());
+    // Mock findById to return the same notification that will be saved
+    when(notificationRepo.findById(100L)).thenAnswer(invocation -> Optional.of(notificationCaptor.getValue()));
+
+    // Mock email sending
+    doNothing().when(emailService).send(any());
+
+    // Act
+    notificationService.sendNotification(request);
+
+    // Assert
+    verify(emailService, times(1)).send(any());
+    Notification savedNotification = notificationCaptor.getValue();
+    assertEquals("Reminder", savedNotification.getMessage());
+    assertEquals(user, savedNotification.getRecipient());
     }
 
     @Test

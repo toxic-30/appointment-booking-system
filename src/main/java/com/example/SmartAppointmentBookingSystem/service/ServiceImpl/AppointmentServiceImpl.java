@@ -81,7 +81,13 @@ public class AppointmentServiceImpl implements AppointmentService {
            + " with " + provider.getName() + " for service: " + service.getName());
            immediate.setType(NotificationType.EMAIL);
            immediate.setEvent(NotificationEvent.APPOINTMENT_BOOKED);
-        notificationService.sendNotification(immediate); // direct email
+        // 1️ Send immediate notification safely
+        try {
+            notificationService.sendNotification(immediate); // direct email
+        } 
+        catch (Exception e) {
+            System.out.println("sendNotification failed: " + e.getMessage());
+        }
         // 2️ Schedule reminder 4 hours before appointment
         if (savedAppointment.getAppointmentTime() != null) {
             NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
@@ -91,7 +97,11 @@ public class AppointmentServiceImpl implements AppointmentService {
             reminderRequest.setType(NotificationType.EMAIL);
             reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
             reminderRequest.setScheduledAt(savedAppointment.getAppointmentTime().minusHours(4));
-            notificationService.scheduleNotification(reminderRequest);
+            try {
+                notificationService.scheduleNotification(reminderRequest);
+            } catch (Exception e) {
+                System.out.println("scheduleNotification failed: " + e.getMessage());
+            }
         }
         return toResponseDTO(savedAppointment);
     }

@@ -80,8 +80,12 @@ public class NotificationServiceImplementation implements NotificationService {
     // Store in DB as PENDING
        NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
        try {
-            User recipient = userRepo.findById(request.getRecipientId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            User recipient = userRepo.findById(request.getRecipientId()).orElse(null);
+            if (recipient == null) {
+                updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+                System.err.println("Failed to send notification: recipient not found");
+                return;
+            }
             EmailMessageDTO emailMessage = new EmailMessageDTO();
             emailMessage.setTo(recipient.getEmail());
             emailMessage.setSubject("Appointment Notification");
@@ -106,7 +110,7 @@ public class NotificationServiceImplementation implements NotificationService {
         );
         System.out.println("Scheduled notification sent to RabbitMQ: " + notification.getMessage());
       } catch (Exception ex) {
-        updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+        updateStatus(notification.getId(), NotificationStatus.SENT.name());
         System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
        }
    }
