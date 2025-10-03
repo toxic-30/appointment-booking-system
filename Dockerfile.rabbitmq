@@ -1,15 +1,18 @@
 # Dockerfile.rabbitmq
 FROM rabbitmq:3.12-management
 
-# Install curl to download plugin
+# Install curl
+USER root
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Download RabbitMQ delayed message exchange plugin directly into plugins directory
-RUN curl -L -o /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange.ez \
-    https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez
+# Ensure plugins directory exists
+RUN mkdir -p /usr/lib/rabbitmq/plugins
 
-# Fix ownership
-RUN chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange.ez
+# Download plugin to /tmp, then move to plugins folder
+RUN curl -L -o /tmp/rabbitmq_delayed_message_exchange.ez \
+    https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez \
+ && mv /tmp/rabbitmq_delayed_message_exchange.ez /usr/lib/rabbitmq/plugins/ \
+ && chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange.ez
 
 # Switch to rabbitmq user
 USER rabbitmq
@@ -18,4 +21,3 @@ USER rabbitmq
 RUN rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
 
 WORKDIR /var/lib/rabbitmq
-
