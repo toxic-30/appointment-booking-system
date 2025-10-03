@@ -1,6 +1,9 @@
 package com.example.SmartAppointmentBookingSystem.entity;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,7 +28,9 @@ public class ProviderServiceMapping {
     private Double priceOverride;
     private Integer durationOverrideMinutes;
     private Boolean isActive = true;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
     private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
     private LocalDateTime updatedAt;
 
     @PrePersist

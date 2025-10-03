@@ -3,6 +3,8 @@ package com.example.SmartAppointmentBookingSystem.entity;
 import java.time.LocalDateTime;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationStatus;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationType;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,9 +29,13 @@ public class Notification {
     private NotificationType type; 
     @Enumerated(EnumType.STRING)
     private NotificationStatus status; 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
     private LocalDateTime scheduledAt; 
-    private LocalDateTime sentAt;      
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
+    private LocalDateTime sentAt;     
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata") 
     private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
     private LocalDateTime updatedAt;
     @PrePersist
     protected void onCreate() {

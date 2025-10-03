@@ -93,7 +93,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
             reminderRequest.setRecipientId(customer.getId());
             reminderRequest.setAppointmentId(savedAppointment.getId());
-            reminderRequest.setMessage("Reminder: Your appointment is tomorrow at " + savedAppointment.getAppointmentTime());
+            reminderRequest.setMessage("Reminder: Your appointment is today at " + savedAppointment.getAppointmentTime());
             reminderRequest.setType(NotificationType.EMAIL);
             reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
             reminderRequest.setScheduledAt(savedAppointment.getAppointmentTime().minusHours(4));

@@ -1,5 +1,8 @@
 package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+
 import com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig;
 import com.example.SmartAppointmentBookingSystem.dto.notification.EmailMessageDTO;
 import com.example.SmartAppointmentBookingSystem.dto.notification.NotificationRequestDTO;
@@ -14,12 +17,10 @@ import com.example.SmartAppointmentBookingSystem.repository.NotificationReposito
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.EmailService;
 import com.example.SmartAppointmentBookingSystem.service.NotificationService;
-import lombok.RequiredArgsConstructor;
+import com.example.SmartAppointmentBookingSystem.util.TimeUtil;
 
-import java.time.LocalDateTime;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
@@ -56,8 +57,9 @@ public class NotificationServiceImplementation implements NotificationService {
                 .message(request.getMessage())
                 .type(request.getType())
                 .status(status)
-                .scheduledAt(request.getScheduledAt()) // keep null if not set
-                .sentAt(status == NotificationStatus.SENT ? LocalDateTime.now() : null)
+                .scheduledAt(request.getScheduledAt()) // null if not set
+                .sentAt(status == NotificationStatus.SENT ? TimeUtil.now() : null)
+                .createdAt(TimeUtil.now())
                 .build();
 
         return toResponseDTO(notificationRepo.save(notification));
@@ -72,49 +74,63 @@ public class NotificationServiceImplementation implements NotificationService {
         } catch (IllegalArgumentException e) {
             throw new ResourceNotFoundException("Invalid status: " + status);
         }
+        // If status is SENT, update sentAt timestamp
+        if (notification.getStatus() == NotificationStatus.SENT && notification.getSentAt() == null) {
+            notification.setSentAt(TimeUtil.now());
+        }
         return toResponseDTO(notificationRepo.save(notification));
     }
 
     @Override
     public void sendNotification(NotificationRequestDTO request) {
-    // Store in DB as PENDING
-       NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
-       try {
+        NotificationResponseDTO notificationDTO = createNotification(request, NotificationStatus.PENDING);
+
+        try {
             User recipient = userRepo.findById(request.getRecipientId()).orElse(null);
             if (recipient == null) {
-                updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+                updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
                 System.err.println("Failed to send notification: recipient not found");
                 return;
             }
+
             EmailMessageDTO emailMessage = new EmailMessageDTO();
             emailMessage.setTo(recipient.getEmail());
             emailMessage.setSubject("Appointment Notification");
             emailMessage.setBody(request.getMessage());
+
             emailService.send(emailMessage);
-            updateStatus(notification.getId(), NotificationStatus.SENT.name());
-            System.out.println("Notification sent: " + notification.getMessage());
+
+            // Update status and sentAt
+            Notification notificationEntity = notificationRepo.findById(notificationDTO.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Notification not found after creation"));
+            notificationEntity.setStatus(NotificationStatus.SENT);
+            notificationEntity.setSentAt(TimeUtil.now());
+            notificationRepo.save(notificationEntity);
+
+            System.out.println("Notification sent: " + notificationDTO.getMessage());
+
         } catch (Exception ex) {
-            updateStatus(notification.getId(), NotificationStatus.FAILED.name());
+            updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
             System.err.println("Failed to send notification: " + ex.getMessage());
         }
     }
+
     @Override
     public void scheduleNotification(NotificationRequestDTO request) {
-      NotificationResponseDTO notification = createNotification(request, NotificationStatus.PENDING);
-      try {
-        // Send to RabbitMQ for async processing
-        rabbitTemplate.convertAndSend(
-            RabbitMQConfig.EXCHANGE,
-            RabbitMQConfig.ROUTING_KEY,
-            request
-        );
-        System.out.println("Scheduled notification sent to RabbitMQ: " + notification.getMessage());
-      } catch (Exception ex) {
-        updateStatus(notification.getId(), NotificationStatus.SENT.name());
-        System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
-       }
-   }
+        NotificationResponseDTO notificationDTO = createNotification(request, NotificationStatus.PENDING);
 
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE,
+                    RabbitMQConfig.ROUTING_KEY,
+                    request
+            );
+            System.out.println("Scheduled notification sent to RabbitMQ: " + notificationDTO.getMessage());
+        } catch (Exception ex) {
+            updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
+            System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
+        }
+    }
 
     private NotificationResponseDTO toResponseDTO(Notification notification) {
         NotificationResponseDTO dto = new NotificationResponseDTO();
