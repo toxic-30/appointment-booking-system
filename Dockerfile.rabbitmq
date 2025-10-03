@@ -1,22 +1,26 @@
-# Dockerfile.rabbitmq
+# Base image matches your RabbitMQ version
 FROM rabbitmq:3.12-management
 
+# Switch to root for package installation
 USER root
+
+# Install curl to download plugin
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Make sure plugin folder exists
+# Ensure plugin directory exists
 RUN mkdir -p /usr/lib/rabbitmq/plugins
 
-# Download plugin into the right directory
+# Download RabbitMQ delayed message exchange plugin
+# ✅ Version pinned to 3.12.0 to match RabbitMQ 3.12-management
 RUN curl -L -o /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez \
     https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez \
  && chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez
 
-# Copy startup script
-COPY enable-plugins.sh /usr/local/bin/enable-plugins.sh
-RUN chmod +x /usr/local/bin/enable-plugins.sh
-
+# Switch back to rabbitmq user
 USER rabbitmq
-WORKDIR /var/lib/rabbitmq
 
-ENTRYPOINT ["/usr/local/bin/enable-plugins.sh"]
+# Enable plugin offline
+# ✅ Use exact plugin name without the version in enable command
+RUN rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
+
+WORKDIR /var/lib/rabbitmq
