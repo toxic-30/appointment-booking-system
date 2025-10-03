@@ -1,23 +1,15 @@
 FROM rabbitmq:3.12-management
 
-# Install curl
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Copy pre-downloaded plugin into the RabbitMQ plugins directory
+COPY rabbitmq_delayed_message_exchange-3.12.0.ez /usr/lib/rabbitmq/plugins/
 
-# Create plugins directory if it doesn't exist
-RUN mkdir -p /plugins
-
-# Download plugin
-RUN curl -L -o /plugins/rabbitmq_delayed_message_exchange.ez \
-    https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez
-
-# Move plugin to correct directory
-RUN mv /plugins/rabbitmq_delayed_message_exchange.ez /usr/lib/rabbitmq/plugins/
-
-# Change ownership
-RUN chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange.ez
+# Fix ownership
+RUN chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez
 
 # Switch to rabbitmq user
 USER rabbitmq
 
 # Enable plugin offline
 RUN rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
+
+WORKDIR /var/lib/rabbitmq
