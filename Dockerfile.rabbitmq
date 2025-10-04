@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /usr/lib/rabbitmq/plugins
 
 # Download RabbitMQ delayed message exchange plugin
-# ✅ Version pinned to 3.12.0 to match RabbitMQ 3.12-management
 RUN curl -L -o /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez \
     https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez \
- && chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez
+ && chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez \
+ && cp /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez /opt/rabbitmq/plugins/
 
 # Switch back to rabbitmq user
 USER rabbitmq
@@ -24,3 +24,10 @@ USER rabbitmq
 RUN rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
 
 WORKDIR /var/lib/rabbitmq
+
+# Copy the plugin enable script
+COPY enable-plugin.sh /usr/local/bin/enable-plugin.sh
+RUN chmod +x /usr/local/bin/enable-plugin.sh
+
+# Use the script as the container's entrypoint
+ENTRYPOINT ["/usr/local/bin/enable-plugin.sh"]
