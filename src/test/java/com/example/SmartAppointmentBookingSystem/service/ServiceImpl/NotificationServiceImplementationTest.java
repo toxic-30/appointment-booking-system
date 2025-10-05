@@ -12,18 +12,15 @@ import com.example.SmartAppointmentBookingSystem.repository.AppointmentRepositor
 import com.example.SmartAppointmentBookingSystem.repository.NotificationRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.EmailService;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -141,6 +138,6 @@ class NotificationServiceImplementationTest {
         when(notificationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         notificationService.scheduleNotification(request);
-        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), eq(request));
+        verify(rabbitTemplate, times(1)).convertAndSend(anyString(),anyString(),eq(request),any(MessagePostProcessor.class));
     }
 }
