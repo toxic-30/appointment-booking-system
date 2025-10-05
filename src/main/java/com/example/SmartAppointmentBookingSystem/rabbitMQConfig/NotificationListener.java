@@ -16,9 +16,9 @@ public class NotificationListener {
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void handleNotification(NotificationRequestDTO request) {
         try {
+            System.out.println("Received notification for appointment " +
+                    request.getAppointmentId() + " at " + LocalDateTime.now());
             notificationService.sendNotification(request);
-            System.out.println("Reminder sent for appointment " + request.getAppointmentId()
-                + " at " + LocalDateTime.now());
         } catch (Exception e) {
             e.printStackTrace();
         }

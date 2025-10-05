@@ -21,6 +21,7 @@ import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.AppointmentService;
 import com.example.SmartAppointmentBookingSystem.service.NotificationService;
+import com.example.SmartAppointmentBookingSystem.util.TimeUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +78,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         NotificationRequestDTO immediate = new NotificationRequestDTO();
            immediate.setRecipientId(customer.getId());
            immediate.setAppointmentId(savedAppointment.getId());
-           immediate.setMessage("Your appointment is booked for " + savedAppointment.getAppointmentTime()
+           immediate.setMessage("Your appointment is booked for " + TimeUtil.format(savedAppointment.getAppointmentTime())
            + " with " + provider.getName() + " for service: " + service.getName());
            immediate.setType(NotificationType.EMAIL);
            immediate.setEvent(NotificationEvent.APPOINTMENT_BOOKED);
@@ -93,7 +94,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             NotificationRequestDTO reminderRequest = new NotificationRequestDTO();
             reminderRequest.setRecipientId(customer.getId());
             reminderRequest.setAppointmentId(savedAppointment.getId());
-            reminderRequest.setMessage("Reminder: Your appointment is today at " + savedAppointment.getAppointmentTime());
+            reminderRequest.setMessage("Reminder: Your appointment is today at " + TimeUtil.format(savedAppointment.getAppointmentTime())
+                + " with " + provider.getName() + " for service: " + service.getName());
             reminderRequest.setType(NotificationType.EMAIL);
             reminderRequest.setEvent(NotificationEvent.APPOINTMENT_REMINDER);
             reminderRequest.setScheduledAt(savedAppointment.getAppointmentTime().minusHours(4));

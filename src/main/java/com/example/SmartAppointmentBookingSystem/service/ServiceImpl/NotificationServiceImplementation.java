@@ -2,7 +2,6 @@ package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
-
 import com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig;
 import com.example.SmartAppointmentBookingSystem.dto.notification.EmailMessageDTO;
 import com.example.SmartAppointmentBookingSystem.dto.notification.NotificationRequestDTO;
@@ -18,7 +17,6 @@ import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.EmailService;
 import com.example.SmartAppointmentBookingSystem.service.NotificationService;
 import com.example.SmartAppointmentBookingSystem.util.TimeUtil;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -120,12 +118,18 @@ public class NotificationServiceImplementation implements NotificationService {
         NotificationResponseDTO notificationDTO = createNotification(request, NotificationStatus.PENDING);
 
         try {
+            final long delayMs = (request.getScheduledAt() != null)
+                ? Math.max(0, java.time.Duration.between(TimeUtil.now(), request.getScheduledAt()).toMillis()): 0;
+            System.out.println("📤 Sending notification to RabbitMQ:");    
             rabbitTemplate.convertAndSend(
                     RabbitMQConfig.EXCHANGE,
                     RabbitMQConfig.ROUTING_KEY,
-                    request
+                    request,
+                    message -> { message.getMessageProperties().setHeader("x-delay", delayMs);
+                    return message;}
             );
-            System.out.println("Scheduled notification sent to RabbitMQ: " + notificationDTO.getMessage());
+            System.out.println("Scheduled notification sent to RabbitMQ: " + notificationDTO.getMessage()
+                + " | Delay: " + delayMs + "ms");
         } catch (Exception ex) {
             updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
             System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
