@@ -35,7 +35,7 @@ Option 2 – Using Docker
 7. Access the same URLs as above. Replace smartappointmentbookingsystem_default with the actual Docker network created by Docker Compose.
 
 ## Configuration
-# Check src/main/resources/application.properties for database and RabbitMQ settings:
+## Check src/main/resources/application.properties for database and RabbitMQ settings:
 spring.datasource.url=jdbc:mysql://localhost:3306/appointmentbookingsystem
 spring.datasource.username=root
 spring.datasource.password=root
