@@ -21,7 +21,6 @@ import com.example.SmartAppointmentBookingSystem.enums.UserRole;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
 import com.example.SmartAppointmentBookingSystem.repository.AppointmentRepository;
 import com.example.SmartAppointmentBookingSystem.repository.ProvidedServiceRepository;
-import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
 import com.example.SmartAppointmentBookingSystem.repository.UserRepository;
 import com.example.SmartAppointmentBookingSystem.service.AppointmentService;
 import com.example.SmartAppointmentBookingSystem.service.NotificationService;

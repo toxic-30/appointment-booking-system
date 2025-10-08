@@ -1,6 +1,4 @@
 package com.example.SmartAppointmentBookingSystem.dto.user;
-
-import lombok.Builder;
 import lombok.Data;
 import com.example.SmartAppointmentBookingSystem.enums.UserRole;
 import jakarta.validation.constraints.Email;
