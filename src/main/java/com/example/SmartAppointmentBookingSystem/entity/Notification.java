@@ -3,6 +3,7 @@ package com.example.SmartAppointmentBookingSystem.entity;
 import java.time.LocalDateTime;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationStatus;
 import com.example.SmartAppointmentBookingSystem.enums.NotificationType;
+import com.example.SmartAppointmentBookingSystem.util.TimeUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.*;
@@ -39,11 +40,10 @@ public class Notification {
     private LocalDateTime updatedAt;
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = createdAt;
-    } 
-    @PreUpdate  
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+      createdAt = TimeUtil.now();
+      updatedAt = createdAt;} 
+      @PreUpdate  
+      protected void onUpdate() {
+        updatedAt = TimeUtil.now();}
+
 }

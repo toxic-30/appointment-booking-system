@@ -1,7 +1,9 @@
 package com.example.SmartAppointmentBookingSystem.dto.appointment;
-
 import java.time.LocalDateTime;
+
 import com.example.SmartAppointmentBookingSystem.enums.AppointmentStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.Data;
 
 @Data
@@ -12,9 +14,11 @@ public class AppointmentResponseDTO {
     private String customerName;
     private String serviceName;
     private String tenantName;
-    private LocalDateTime appointmentTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
+    private LocalDateTime  appointmentTime; 
     private String notes;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
+    private LocalDateTime  createdAt;     
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Kolkata")
+    private LocalDateTime  updatedAt;       
 }

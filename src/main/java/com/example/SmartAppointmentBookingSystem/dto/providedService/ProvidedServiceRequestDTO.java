@@ -21,7 +21,5 @@ public class ProvidedServiceRequestDTO {
     private int durationMinutes;
     @NotNull
     private Long tenantId; // link service to a tenant
-    @NotNull
-    private Long userId;
 
 }

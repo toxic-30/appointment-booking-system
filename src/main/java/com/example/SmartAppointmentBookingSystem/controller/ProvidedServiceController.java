@@ -1,9 +1,11 @@
 package com.example.SmartAppointmentBookingSystem.controller;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedServiceRequestDTO;
 import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedServiceResponseDTO;
+import com.example.SmartAppointmentBookingSystem.entity.User;
 import com.example.SmartAppointmentBookingSystem.service.ProvidedServiceService;
 import lombok.RequiredArgsConstructor;
 
@@ -34,23 +36,25 @@ public class ProvidedServiceController {
 
     // Add new service
     @PostMapping("/addService")
-    public ResponseEntity<ProvidedServiceResponseDTO> addService(@RequestBody ProvidedServiceRequestDTO requestDTO) {
-        return ResponseEntity.ok(providedServiceService.addService(requestDTO));
+    public ResponseEntity<ProvidedServiceResponseDTO> addService(@RequestBody ProvidedServiceRequestDTO requestDTO,
+    @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(providedServiceService.addService(requestDTO, currentUser));
     }
 
     // Update service
     @PutMapping("/updateService/{id}")
     public ResponseEntity<ProvidedServiceResponseDTO> updateService(
             @PathVariable Long id,
-            @RequestBody ProvidedServiceRequestDTO requestDTO
+            @RequestBody ProvidedServiceRequestDTO requestDTO,
+            @AuthenticationPrincipal User currentUser
     ) {
-        return ResponseEntity.ok(providedServiceService.updateService(id, requestDTO));
+        return ResponseEntity.ok(providedServiceService.updateService(id, requestDTO, currentUser));
     }
 
     //  Delete service
     @DeleteMapping("/deleteService/{id}")
-    public ResponseEntity<Void> deleteService(@PathVariable Long id) {
-        providedServiceService.deleteService(id);
+    public ResponseEntity<Void> deleteService(@PathVariable Long id,@AuthenticationPrincipal User currentUser) {
+        providedServiceService.deleteService(id, currentUser);
         return ResponseEntity.noContent().build();
     }
 }

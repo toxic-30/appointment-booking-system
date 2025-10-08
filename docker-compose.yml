@@ -56,6 +56,6 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
-
+      TZ: Asia/Kolkata
 volumes:
   mysql_data:

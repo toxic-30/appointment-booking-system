@@ -1,0 +1,599 @@
+{
+	"info": {
+		"_postman_id": "aa9bde44-b46e-4aa8-935c-961a75da203f",
+		"name": "SmartAppointmentBookingSystem",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27753487"
+	},
+	"item": [
+		{
+			"name": "http://localhost:8085/api/users/getAllUsers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/users/getAllUsers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"users",
+						"getAllUsers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/tenants/addTenant",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODUwMTQ0LCJleHAiOjE3NTk4NTM3NDR9.n750-2fhH8xHrg_twnWkkfpzBnbffpuHlytg5pH5ifs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"City Hospital\",\r\n  \"address\": \"Ghaziabad\",\r\n  \"contactNumber\": \"8888234588\",\r\n  \"email\": \"cityhospital123@gmail.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/tenants/addTenant",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"tenants",
+						"addTenant"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/users/addUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODUwMTQ0LCJleHAiOjE3NTk4NTM3NDR9.n750-2fhH8xHrg_twnWkkfpzBnbffpuHlytg5pH5ifs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Shruti Pandey\",\r\n  \"email\": \"santoshipandey070@gmail.com\",\r\n  \"password\": \"shruti123\",\r\n  \"role\": \"CUSTOMER\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/users/addUser",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"users",
+						"addUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/tenants/1",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "shivangi123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "ADMIN",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"City Hospital\",\r\n  \"address\": \"Ghaziabad\",\r\n  \"contactNumber\": \"8888234588\",\r\n  \"email\": \"cityhospital123@gmail.com\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/tenants/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"tenants",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/services/addService",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODUwMTQ0LCJleHAiOjE3NTk4NTM3NDR9.n750-2fhH8xHrg_twnWkkfpzBnbffpuHlytg5pH5ifs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Consultation\",\r\n  \"description\": \"Basic consultation\",\r\n  \"price\": 1000,\r\n  \"durationMinutes\": 10,\r\n  \"tenantId\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/services/addService",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"services",
+						"addService"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/users/addUser",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Shivangi Pandey\",\r\n    \"email\": \"shivangipandey00@gmail.com\",\r\n    \"password\": \"shivangi556\",\r\n    \"role\": \"ADMIN\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/users/addUser",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"users",
+						"addUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/users/addUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODUwMTQ0LCJleHAiOjE3NTk4NTM3NDR9.n750-2fhH8xHrg_twnWkkfpzBnbffpuHlytg5pH5ifs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Shrestha Singh\",\r\n  \"email\": \"shreshtasingh00@gmail.com\",\r\n  \"password\": \"shrestha556\",\r\n  \"role\": \"PROVIDER\",\r\n  \"tenantId\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/users/addUser",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"users",
+						"addUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/auth/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"shivangipandey00@gmail.com\",\r\n  \"password\": \"shivangi556\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/users/addUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODUwMTQ0LCJleHAiOjE3NTk4NTM3NDR9.n750-2fhH8xHrg_twnWkkfpzBnbffpuHlytg5pH5ifs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Shubhkriti Pandey\",\r\n    \"email\": \"shubhkriti123@gmail.com\",\r\n    \"password\": \"shubhkriti123\",\r\n    \"role\": \"ADMIN\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/users/addUser",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"users",
+						"addUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/appointments/createAppointment",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODYwMTQ3LCJleHAiOjE3NTk4NjM3NDd9.G89LzPIye3W8E59RaVX1RHot7N6THrPMEHRlmk3xK4c",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"providerId\": 3,\r\n  \"customerId\": 4,\r\n  \"serviceId\": 1,\r\n  \"tenantId\": 1,\r\n  \"appointmentTime\": \"2025-10-08 04:00:00\",\r\n  \"notes\": \"First Appointment\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/appointments/createAppointment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"appointments",
+						"createAppointment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/notifications/1",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaHViaGtyaXRpMTIzQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5ODYwODU3LCJleHAiOjE3NTk4NjQ0NTd9.tpa8pyoT4pOpvB-8CvsiUL_7eMwmG07M_dbtSm6gmnQ",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8085/api/notifications/4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"notifications",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/appointments/createAppointment",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaHJlc2h0YXNpbmdoMDBAZ21haWwuY29tIiwicm9sZSI6IlJPTEVfUFJPVklERVIiLCJpYXQiOjE3NTk4NzM2MzIsImV4cCI6MTc1OTg3NzIzMn0.OyvbedliTz3ABTzDXjGKhFpdwXS4EnTmbA7bZ8u_vn4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"providerId\": 3,\r\n  \"customerId\": 4,\r\n  \"serviceId\": 1,\r\n  \"tenantId\": 1,\r\n  \"appointmentTime\": \"2025-10-08 07:24:00\",\r\n  \"notes\": \"First Appointment\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/appointments/createAppointment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"appointments",
+						"createAppointment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/services/1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/services/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"services",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/services/updateService/1",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5OTA1NzA0LCJleHAiOjE3NTk5MDkzMDR9.rus6lnk_9eLVo8vRLs_PTICXM1ExpA5vutjU0rh5vUE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Consultation\",\r\n    \"description\": \"Basic consultation\",\r\n    \"price\": 700.0,\r\n    \"durationMinutes\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/services/updateService/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"services",
+						"updateService",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/appointments/getAppointment/1",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5OTA1NzA0LCJleHAiOjE3NTk5MDkzMDR9.rus6lnk_9eLVo8vRLs_PTICXM1ExpA5vutjU0rh5vUE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8085/api/appointments/getAppointment/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"appointments",
+						"getAppointment",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/appointments/customer/4",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5OTA1NzA0LCJleHAiOjE3NTk5MDkzMDR9.rus6lnk_9eLVo8vRLs_PTICXM1ExpA5vutjU0rh5vUE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8085/api/appointments/customer/4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"appointments",
+						"customer",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/mappings/create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaGl2YW5naXBhbmRleTAwQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0FETUlOIiwiaWF0IjoxNzU5OTEwMTY2LCJleHAiOjE3NTk5MTM3NjZ9.rUqiCgOxpJcrsPbLZuy-4OtbLSZ18VtyCpoacK1l6ME",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"provider\": {\r\n    \"id\": 3\r\n  },\r\n  \"service\": {\r\n    \"id\": 1\r\n  },\r\n  \"tenant\": {\r\n    \"id\": 1\r\n  },\r\n  \"priceOverride\": 500,\r\n  \"durationOverrideMinutes\": 6,\r\n  \"isActive\": true\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/mappings/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"mappings",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/api/auth/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"shivangipandey00@gmail.com\",\r\n  \"password\": \"wrongPassword\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

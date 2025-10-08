@@ -8,4 +8,5 @@ import com.example.SmartAppointmentBookingSystem.entity.Tenant;
 @Repository
 public interface TenantRepository extends JpaRepository <Tenant, Long>{
     Optional<Tenant> findByEmail(String email);
+    boolean existsByUsers_Id(Long userId);
 }

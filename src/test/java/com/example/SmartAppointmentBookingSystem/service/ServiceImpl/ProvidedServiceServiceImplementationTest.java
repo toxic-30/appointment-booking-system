@@ -4,12 +4,15 @@ import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedSer
 import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedServiceResponseDTO;
 import com.example.SmartAppointmentBookingSystem.entity.ProvidedService;
 import com.example.SmartAppointmentBookingSystem.entity.Tenant;
+import com.example.SmartAppointmentBookingSystem.entity.User;
+import com.example.SmartAppointmentBookingSystem.enums.UserRole;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
 import com.example.SmartAppointmentBookingSystem.repository.ProvidedServiceRepository;
 import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
@@ -25,11 +28,14 @@ class ProvidedServiceServiceImplementationTest {
     @Mock TenantRepository tenantRepo;
     @InjectMocks ProvidedServiceServiceImplementation service;
 
+    @Mock User currentUser;
+
     @Test
     void getAllServices_returnsList() {
         ProvidedService serviceEntity = new ProvidedService();
         serviceEntity.setName("Service1");
         when(providedServiceRepo.findAll()).thenReturn(List.of(serviceEntity));
+
         List<ProvidedServiceResponseDTO> services = service.getAllServices();
         assertEquals(1, services.size());
         assertEquals("Service1", services.get(0).getName());
@@ -40,8 +46,10 @@ class ProvidedServiceServiceImplementationTest {
         ProvidedService serviceEntity = new ProvidedService();
         serviceEntity.setName("Service1");
         when(providedServiceRepo.findByTenantId(2L)).thenReturn(List.of(serviceEntity));
+
         List<ProvidedServiceResponseDTO> services = service.getServicesByTenant(2L);
         assertEquals(1, services.size());
+        assertEquals("Service1", services.get(0).getName());
     }
 
     @Test
@@ -49,6 +57,7 @@ class ProvidedServiceServiceImplementationTest {
         ProvidedService serviceEntity = new ProvidedService();
         serviceEntity.setName("Service1");
         when(providedServiceRepo.findById(1L)).thenReturn(Optional.of(serviceEntity));
+
         ProvidedServiceResponseDTO dto = service.getServiceById(1L);
         assertEquals("Service1", dto.getName());
     }
@@ -60,7 +69,7 @@ class ProvidedServiceServiceImplementationTest {
     }
 
     @Test
-    void addService_success() {
+    void addService_success_adminOrProvider() {
         ProvidedServiceRequestDTO dto = new ProvidedServiceRequestDTO();
         dto.setName("Service1");
         dto.setDescription("Desc");
@@ -79,7 +88,10 @@ class ProvidedServiceServiceImplementationTest {
             return s;
         });
 
-        ProvidedServiceResponseDTO result = service.addService(dto);
+        // Mock currentUser as ADMIN
+        when(currentUser.getRole()).thenReturn(UserRole.ADMIN);
+
+        ProvidedServiceResponseDTO result = service.addService(dto, currentUser);
         assertEquals("Service1", result.getName());
         assertEquals("Tenant1", result.getTenantName());
     }
@@ -89,44 +101,80 @@ class ProvidedServiceServiceImplementationTest {
         ProvidedServiceRequestDTO dto = new ProvidedServiceRequestDTO();
         dto.setTenantId(2L);
         when(tenantRepo.findById(2L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.addService(dto));
+
+        when(currentUser.getRole()).thenReturn(UserRole.ADMIN);
+        assertThrows(ResourceNotFoundException.class, () -> service.addService(dto, currentUser));
     }
 
     @Test
-    void updateService_found() {
+    void updateService_found_providerOwner() {
         ProvidedService serviceEntity = new ProvidedService();
         serviceEntity.setId(1L);
         serviceEntity.setName("Old");
+        Tenant tenant = new Tenant();
+        tenant.setUsers(List.of(currentUser));
+        serviceEntity.setTenant(tenant);
+
+        when(currentUser.getRole()).thenReturn(UserRole.PROVIDER);
         when(providedServiceRepo.findById(1L)).thenReturn(Optional.of(serviceEntity));
         when(providedServiceRepo.save(any())).thenAnswer(i -> i.getArgument(0));
+
         ProvidedServiceRequestDTO dto = new ProvidedServiceRequestDTO();
         dto.setName("New");
         dto.setDescription("Desc");
         dto.setPrice(200.0);
         dto.setDurationMinutes(45);
-        ProvidedServiceResponseDTO result = service.updateService(1L, dto);
+
+        ProvidedServiceResponseDTO result = service.updateService(1L, dto, currentUser);
         assertEquals("New", result.getName());
     }
 
     @Test
-    void updateService_notFound() {
-        ProvidedServiceRequestDTO dto = new ProvidedServiceRequestDTO();
-        when(providedServiceRepo.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.updateService(1L, dto));
-    }
-
-    @Test
-    void deleteService_found() {
+    void updateService_notOwnedByProvider_throws() {
         ProvidedService serviceEntity = new ProvidedService();
         serviceEntity.setId(1L);
+        serviceEntity.setName("Old");
+        serviceEntity.setTenant(new Tenant()); // provider not in tenant
+
+        when(currentUser.getRole()).thenReturn(UserRole.PROVIDER);
         when(providedServiceRepo.findById(1L)).thenReturn(Optional.of(serviceEntity));
-        doNothing().when(providedServiceRepo).delete(serviceEntity);
-        assertDoesNotThrow(() -> service.deleteService(1L));
+
+        ProvidedServiceRequestDTO dto = new ProvidedServiceRequestDTO();
+        assertThrows(AccessDeniedException.class, () -> service.updateService(1L, dto, currentUser));
     }
 
     @Test
-    void deleteService_notFound() {
+    void deleteService_found_adminOrOwner() {
+        ProvidedService serviceEntity = new ProvidedService();
+        serviceEntity.setId(1L);
+        Tenant tenant = new Tenant();
+        tenant.setUsers(List.of(currentUser));
+        serviceEntity.setTenant(tenant);
+
+        when(providedServiceRepo.findById(1L)).thenReturn(Optional.of(serviceEntity));
+        when(currentUser.getRole()).thenReturn(UserRole.PROVIDER);
+
+        doNothing().when(providedServiceRepo).delete(serviceEntity);
+        assertDoesNotThrow(() -> service.deleteService(1L, currentUser));
+    }
+
+    @Test
+    void deleteService_notOwnedByProvider_throws() {
+        ProvidedService serviceEntity = new ProvidedService();
+        serviceEntity.setId(1L);
+        serviceEntity.setTenant(new Tenant()); // provider not in tenant
+
+        when(providedServiceRepo.findById(1L)).thenReturn(Optional.of(serviceEntity));
+        when(currentUser.getRole()).thenReturn(UserRole.PROVIDER);
+
+        assertThrows(AccessDeniedException.class, () -> service.deleteService(1L, currentUser));
+    }
+
+    @Test
+    void deleteService_notFound_throws() {
         when(providedServiceRepo.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.deleteService(1L));
+        when(currentUser.getRole()).thenReturn(UserRole.ADMIN);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.deleteService(1L, currentUser));
     }
 }

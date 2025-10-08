@@ -1,5 +1,7 @@
 package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig;
@@ -30,6 +32,7 @@ public class NotificationServiceImplementation implements NotificationService {
     private final AppointmentRepository appointmentRepo;
     private final EmailService emailService;
     private final RabbitTemplate rabbitTemplate;
+    private static final Logger log = LoggerFactory.getLogger(NotificationServiceImplementation.class);
 
     @Override
     public NotificationResponseDTO getNotificationById(Long id) {
@@ -41,12 +44,14 @@ public class NotificationServiceImplementation implements NotificationService {
     @Override
     public NotificationResponseDTO createNotification(NotificationRequestDTO request, NotificationStatus status) {
         User recipient = userRepo.findById(request.getRecipientId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getRecipientId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("User not found with id: " + request.getRecipientId()));
 
         Appointment appointment = null;
         if (request.getAppointmentId() != null) {
             appointment = appointmentRepo.findById(request.getAppointmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + request.getAppointmentId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Appointment not found with id: " + request.getAppointmentId()));
         }
 
         Notification notification = Notification.builder()
@@ -87,7 +92,7 @@ public class NotificationServiceImplementation implements NotificationService {
             User recipient = userRepo.findById(request.getRecipientId()).orElse(null);
             if (recipient == null) {
                 updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
-                System.err.println("Failed to send notification: recipient not found");
+                log.error("Failed to send notification: recipient not found");
                 return;
             }
 
@@ -109,30 +114,70 @@ public class NotificationServiceImplementation implements NotificationService {
 
         } catch (Exception ex) {
             updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
-            System.err.println("Failed to send notification: " + ex.getMessage());
+            log.error("Failed to send notification: " + ex.getMessage());
         }
     }
 
     @Override
     public void scheduleNotification(NotificationRequestDTO request) {
-        NotificationResponseDTO notificationDTO = createNotification(request, NotificationStatus.PENDING);
-
+        NotificationResponseDTO notificationDTO;
         try {
+            // Check if a PENDING notification already exists for this appointment + type
+            Notification existingNotification = notificationRepo.findByAppointmentIdAndTypeAndStatus(
+                    request.getAppointmentId(),
+                    request.getType(),
+                    NotificationStatus.PENDING)
+                    .orElse(null);
+
+            if (existingNotification != null) {
+                // Step 2a: Update existing notification
+                existingNotification.setMessage(request.getMessage());
+                existingNotification.setScheduledAt(request.getScheduledAt());
+                notificationDTO = toResponseDTO(notificationRepo.save(existingNotification));
+                log.info("Updated existing scheduled notification: " + notificationDTO.getId());
+            } else {
+                // Create new notification with PENDING status
+                notificationDTO = createNotification(request, NotificationStatus.PENDING);
+                log.info("Created new scheduled notification: " + notificationDTO.getId());
+            }
+
+            // Step 3: Calculate delay for RabbitMQ
             final long delayMs = (request.getScheduledAt() != null)
-                ? Math.max(0, java.time.Duration.between(TimeUtil.now(), request.getScheduledAt()).toMillis()): 0;
-            System.out.println("📤 Sending notification to RabbitMQ:");    
+                    ? Math.max(0, java.time.Duration.between(TimeUtil.now(), request.getScheduledAt()).toMillis())
+                    : 0;
+
+            // Step 4: Send to RabbitMQ with delay
             rabbitTemplate.convertAndSend(
                     RabbitMQConfig.EXCHANGE,
                     RabbitMQConfig.ROUTING_KEY,
                     request,
-                    message -> { message.getMessageProperties().setHeader("x-delay", delayMs);
-                    return message;}
-            );
-            System.out.println("Scheduled notification sent to RabbitMQ: " + notificationDTO.getMessage()
-                + " | Delay: " + delayMs + "ms");
+                    message -> {
+                        message.getMessageProperties().setHeader("x-delay", delayMs);
+                        return message;
+                    });
+
+            log.info("Scheduled notification sent to RabbitMQ: " + notificationDTO.getMessage()
+                    + " | Delay: " + delayMs + "ms");
+
         } catch (Exception ex) {
-            updateStatus(notificationDTO.getId(), NotificationStatus.FAILED.name());
-            System.err.println("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
+            log.error("Failed to schedule notification to RabbitMQ: " + ex.getMessage());
+            // If notificationEntity exists, mark as FAILED
+            try {
+                if (request.getAppointmentId() != null) {
+                    Notification pendingNotification = notificationRepo
+                            .findByAppointmentIdAndTypeAndStatus(
+                                    request.getAppointmentId(),
+                                    request.getType(),
+                                    NotificationStatus.PENDING)
+                            .orElse(null);
+
+                    if (pendingNotification != null) {
+                        updateStatus(pendingNotification.getId(), NotificationStatus.FAILED.name());
+                    }
+                }
+            } catch (Exception innerEx) {
+                log.error("Failed to update notification status to FAILED: " + innerEx.getMessage());
+            }
         }
     }
 

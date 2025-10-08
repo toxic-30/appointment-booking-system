@@ -3,6 +3,8 @@ package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.SmartAppointmentBookingSystem.dto.user.UserRequestDTO;
@@ -35,12 +37,55 @@ public class UserServiceImplementation implements UserService{
     }
 
     @Override
-    public UserResponseDTO addUser(UserRequestDTO userRequestDTO) {
+    public void deleteUser(Long id) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        userRepo.delete(user);
+    }
 
+    @Override
+    public UserResponseDTO updateUser(Long id, UserRequestDTO userRequestDTO) {
+         User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setName(userRequestDTO.getName());
+        user.setEmail(userRequestDTO.getEmail());
+        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword())); // only update if provided
+        }
+        User updatedUser = userRepo.save(user);
+        return toResponseDTO(updatedUser);
+    }
+
+    @Override
+    public Optional<UserResponseDTO> getUserById(Long id) {
+        return userRepo.findById(id).map(this::toResponseDTO);
+    }
+    @Override
+    public Optional<UserResponseDTO> getUserByUserCode(String userCode) {
+       return userRepo.findByUserCode(userCode).map(this::toResponseDTO);
+    }
+
+    @Override
+    public UserResponseDTO addUser(UserRequestDTO userRequestDTO, User currentUser) {
+        boolean adminExists = userRepo.existsByRole(UserRole.ADMIN);
+        // Admin creation
+        if (userRequestDTO.getRole() == UserRole.ADMIN) {
+            if (!adminExists) {
+        // allow first admin without login
+        } else if (currentUser == null || currentUser.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Only an existing admin can create new admins");
+        }
+        } else if (userRequestDTO.getRole() == UserRole.PROVIDER) {
+            if (currentUser == null || currentUser.getRole() != UserRole.ADMIN) {
+                throw new AccessDeniedException("Only admin can create providers");
+            }
+        } else if (currentUser == null) {
+             // all other roles become CUSTOMER
+             userRequestDTO.setRole(UserRole.CUSTOMER);
+        }    
         if (userRepo.findByEmail(userRequestDTO.getEmail()).isPresent()) {
             throw new com.example.SmartAppointmentBookingSystem.exception.DuplicateResourceException("User with email already exists");
         }
-
         User user = toEntity(userRequestDTO);
         if(user.getRole()== UserRole.PROVIDER){
             Tenant tenant ;
@@ -68,35 +113,6 @@ public class UserServiceImplementation implements UserService{
         user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword())); // Secure password
         User savedUser = userRepo.save(user);
         return toResponseDTO(savedUser);
-    }
-
-    @Override
-    public void deleteUser(Long id) {
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        userRepo.delete(user);
-    }
-
-    @Override
-    public UserResponseDTO updateUser(Long id, UserRequestDTO userRequestDTO) {
-         User user = userRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        user.setName(userRequestDTO.getName());
-        user.setEmail(userRequestDTO.getEmail());
-        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword())); // only update if provided
-        }
-        User updatedUser = userRepo.save(user);
-        return toResponseDTO(updatedUser);
-    }
-
-    @Override
-    public Optional<UserResponseDTO> getUserById(Long id) {
-        return userRepo.findById(id).map(this::toResponseDTO);
-    }
-    @Override
-    public Optional<UserResponseDTO> getUserByUserCode(String userCode) {
-       return userRepo.findByUserCode(userCode).map(this::toResponseDTO);
     }
 
     private UserResponseDTO toResponseDTO(User user) {

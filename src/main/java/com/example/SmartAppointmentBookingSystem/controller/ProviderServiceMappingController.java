@@ -2,11 +2,11 @@ package com.example.SmartAppointmentBookingSystem.controller;
 
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import com.example.SmartAppointmentBookingSystem.entity.ProviderServiceMapping;
+import com.example.SmartAppointmentBookingSystem.entity.User;
 import com.example.SmartAppointmentBookingSystem.service.ProviderServiceMappingService;
-
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -17,44 +17,38 @@ public class ProviderServiceMappingController {
     private final ProviderServiceMappingService mappingService;
 
     @PostMapping("/create")
-    public ResponseEntity<ProviderServiceMapping> createMapping(@RequestBody ProviderServiceMapping mapping) {
-        return ResponseEntity.ok(mappingService.createMapping(mapping));
+    public ResponseEntity<ProviderServiceMapping> createMapping(
+            @RequestBody ProviderServiceMapping mapping,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(mappingService.createMapping(mapping, currentUser));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProviderServiceMapping> getMappingById(@PathVariable Long id) {
-        ProviderServiceMapping mapping = mappingService.getMappingById(id);
-        return ResponseEntity.ok(mapping);
+    public ResponseEntity<ProviderServiceMapping> getMappingById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(mappingService.getMappingById(id, currentUser));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProviderServiceMapping>> getAllMappings() {
-        return ResponseEntity.ok(mappingService.getAllMappings());
+    public ResponseEntity<List<ProviderServiceMapping>> getAllMappings(
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(mappingService.getAllMappings(currentUser));
     }
 
-    @GetMapping("/provider/{providerId}")
-    public ResponseEntity<List<ProviderServiceMapping>> getMappingsByProvider(@PathVariable Long providerId) {
-        return ResponseEntity.ok(mappingService.getMappingsByProvider(providerId));
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ProviderServiceMapping> updateMapping(
+            @PathVariable Long id,
+            @RequestBody ProviderServiceMapping updatedMapping,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(mappingService.updateMapping(id, updatedMapping, currentUser));
     }
 
-    @GetMapping("/service/{serviceId}")
-    public ResponseEntity<List<ProviderServiceMapping>> getMappingsByService(@PathVariable Long serviceId) {
-        return ResponseEntity.ok(mappingService.getMappingsByService(serviceId));
-    }
-
-    @GetMapping("/tenant/{tenantId}")
-    public ResponseEntity<List<ProviderServiceMapping>> getMappingsByTenant(@PathVariable Long tenantId) {
-        return ResponseEntity.ok(mappingService.getMappingsByTenant(tenantId));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ProviderServiceMapping> updateMapping(@PathVariable Long id, @RequestBody ProviderServiceMapping updatedMapping) {
-        return ResponseEntity.ok(mappingService.updateMapping(id, updatedMapping));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMapping(@PathVariable Long id) {
-        mappingService.deleteMapping(id);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteMapping(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        mappingService.deleteMapping(id, currentUser);
         return ResponseEntity.noContent().build();
     }
 }

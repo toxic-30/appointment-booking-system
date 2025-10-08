@@ -1,11 +1,15 @@
 package com.example.SmartAppointmentBookingSystem.service.ServiceImpl;
 
 import java.util.List;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedServiceRequestDTO;
 import com.example.SmartAppointmentBookingSystem.dto.providedService.ProvidedServiceResponseDTO;
 import com.example.SmartAppointmentBookingSystem.entity.ProvidedService;
 import com.example.SmartAppointmentBookingSystem.entity.Tenant;
+import com.example.SmartAppointmentBookingSystem.entity.User;
+import com.example.SmartAppointmentBookingSystem.enums.UserRole;
 import com.example.SmartAppointmentBookingSystem.exception.ResourceNotFoundException;
 import com.example.SmartAppointmentBookingSystem.repository.ProvidedServiceRepository;
 import com.example.SmartAppointmentBookingSystem.repository.TenantRepository;
@@ -41,10 +45,16 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
     }
 
     @Override
-    public ProvidedServiceResponseDTO addService(ProvidedServiceRequestDTO serviceRequestDTO) {
+    public ProvidedServiceResponseDTO addService(ProvidedServiceRequestDTO serviceRequestDTO,User currentUser) {
         Tenant tenant = tenantRepo.findById(serviceRequestDTO.getTenantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + serviceRequestDTO.getTenantId()));
 
+        if (currentUser.getRole() == UserRole.PROVIDER) {
+        if (!tenant.getUsers().contains(currentUser)) {
+            throw new AccessDeniedException("Provider can only add services to their own tenant.");}
+        } else if (currentUser.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Only admins or tenant owners can add services.");
+    }        
         ProvidedService service = new ProvidedService();
         service.setName(serviceRequestDTO.getName());
         service.setDescription(serviceRequestDTO.getDescription());
@@ -55,32 +65,39 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
         ProvidedService savedService = providedServiceRepo.save(service);
         return toResponseDTO(savedService);
     }
-
     @Override
-    public ProvidedServiceResponseDTO updateService(Long id, ProvidedServiceRequestDTO serviceRequestDTO) {
+    public ProvidedServiceResponseDTO updateService(Long id, ProvidedServiceRequestDTO serviceRequestDTO,
+            User currentUser) {
         ProvidedService service = providedServiceRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
-
+            .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
+        Tenant tenant = service.getTenant();
+        if (currentUser.getRole() == UserRole.PROVIDER) {
+            if (!tenant.getUsers().contains(currentUser)) {
+               throw new AccessDeniedException("Provider can only update services in their own tenant.");
+            }
+        } else if (currentUser.getRole() != UserRole.ADMIN) {
+        throw new AccessDeniedException("Only admins or tenant owners can update services.");
+        }
         service.setName(serviceRequestDTO.getName());
         service.setDescription(serviceRequestDTO.getDescription());
         service.setPrice(serviceRequestDTO.getPrice());
         service.setDurationMinutes(serviceRequestDTO.getDurationMinutes());
-
-        // Optional: update tenant if provided
-        if (serviceRequestDTO.getTenantId() != null) {
-            Tenant tenant = tenantRepo.findById(serviceRequestDTO.getTenantId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + serviceRequestDTO.getTenantId()));
-            service.setTenant(tenant);
-        }
-
         ProvidedService updatedService = providedServiceRepo.save(service);
         return toResponseDTO(updatedService);
     }
 
     @Override
-    public void deleteService(Long id) {
-         ProvidedService service = providedServiceRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
+    public void deleteService(Long id, User currentUser) {
+        ProvidedService service = providedServiceRepo.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + id));
+        Tenant tenant = service.getTenant();
+        // Role & ownership check
+        if (currentUser.getRole() == UserRole.PROVIDER) {
+            if (!tenant.getUsers().contains(currentUser)) {
+               throw new AccessDeniedException("Provider can only delete services in their own tenant."); }
+        } else if (currentUser.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Only admins or tenant owners can delete services.");
+        }
         providedServiceRepo.delete(service);
     }
 
@@ -97,5 +114,6 @@ public class ProvidedServiceServiceImplementation implements ProvidedServiceServ
         }
         return dto;
     }
+
 
 }

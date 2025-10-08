@@ -2,6 +2,8 @@ package com.example.SmartAppointmentBookingSystem.rabbitMQConfig;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import com.example.SmartAppointmentBookingSystem.config.RabbitMQConfig;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationServiceQueue {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationServiceQueue.class);
     private final RabbitTemplate rabbitTemplate;
 
     public void scheduleNotification(NotificationRequestDTO reminderRequest) {
@@ -30,8 +33,6 @@ public class NotificationServiceQueue {
                     return message;
                 }
         );
-        System.out.println("Scheduled notification for appointment "
-                + reminderRequest.getAppointmentId()
-                + " in " + delayMs / 1000 / 60 + " minutes");
+        log.info("Scheduled notification for appointment "+ reminderRequest.getAppointmentId()+ " in " + delayMs / 1000 / 60 + " minutes");
     }
 }

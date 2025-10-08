@@ -1,33 +1,11 @@
-# Base image matches your RabbitMQ version
 FROM rabbitmq:3.12-management
 
-# Switch to root for package installation
+# Copy plugin into RabbitMQ plugin directory
+COPY plugins/rabbitmq_delayed_message_exchange-3.12.0.ez /opt/rabbitmq/plugins/
+
+# Fix permissions
 USER root
-
-# Install curl to download plugin
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# Ensure plugin directory exists
-RUN mkdir -p /usr/lib/rabbitmq/plugins
-
-# Download RabbitMQ delayed message exchange plugin
-RUN curl -L -o /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez \
-    https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez \
- && chown rabbitmq:rabbitmq /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez \
- && cp /usr/lib/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez /opt/rabbitmq/plugins/
-
-# Switch back to rabbitmq user
+RUN chown rabbitmq:rabbitmq /opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez
 USER rabbitmq
 
-# Enable plugin offline
-# ✅ Use exact plugin name without the version in enable command
-RUN rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
-
-WORKDIR /var/lib/rabbitmq
-
-# Copy the plugin enable script
-COPY enable-plugin.sh /usr/local/bin/enable-plugin.sh
-RUN chmod +x /usr/local/bin/enable-plugin.sh
-
-# Use the script as the container's entrypoint
-ENTRYPOINT ["/usr/local/bin/enable-plugin.sh"]
+# RabbitMQ will start normally; enable plugin at container start
