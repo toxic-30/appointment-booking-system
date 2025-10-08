@@ -1,9 +1,11 @@
-## appointment-booking-system
-Smart Appointment Booking System built with Java &amp; Spring Boot, featuring CRUD for users, appointments, and services, role-based access, email confirmations, async reminders, and API testing via Swagger.
+Appointment Booking System
+Smart Appointment Booking System built with Java, Spring Boot, featuring CRUD for users, appointments, and services, role-based access, email confirmations, async reminders, and API testing via Swagger.
 
 ## Prerequisites
 Java 21
 Maven 3.9+
+MySQL Server
+RabbitMQ server with delayed message exchange plugin
 Docker Desktop (optional if using Docker)
 Git
 
