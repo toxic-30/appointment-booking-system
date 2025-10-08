@@ -8,21 +8,20 @@ Docker Desktop (optional if using Docker)
 Git
 
 ## Running Locally
-# Option 1 – Using Maven
+Option 1 – Using Maven
 1. Clone the repository:
    git clone https://github.com/your-username/SmartAppointmentBookingSystem.git
    cd SmartAppointmentBookingSystem
-3. Start dependencies (MySQL + RabbitMQ) using Docker Compose:
-   docker-compose up -d
-4. Build & run the application:
-   mvn clean install
-   mvn spring-boot:run
+2. Make sure MySQL & rabbitMQ should be present with delayed message plugin.
+3. Configure the below given properties of application.properties file.
+4. Build the project - mvn clean install
+5. Run the program - mvn spring-boot:run
 6. Access the application:
     APIs: http://localhost:8085
     Swagger UI: http://localhost:8085/swagger-ui/index.html
     RabbitMQ Management: http://localhost:15672 (user: guest, password: guest)
 
-# Option 2 – Using Docker Only
+Option 2 – Using Docker 
 1. Build the Docker image:
    docker build -t smartappointmentbookingsystem-image .
 3. Start dependencies (MySQL + RabbitMQ):
@@ -43,12 +42,8 @@ spring.rabbitmq.port=5672
 spring.rabbitmq.username=guest
 spring.rabbitmq.password=guest
 server.port=8085
-Modify if needed.
-
 ## Stopping the Application
 docker stop smartappointmentbookingsystem-app
 docker rm smartappointmentbookingsystem-app
 docker-compose down
-
-
 RabbitMQ default credentials: guest / guest
